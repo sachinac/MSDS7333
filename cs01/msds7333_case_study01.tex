@@ -83,7 +83,7 @@
 \makeatother
 \subtitle{Real Time Location Systems}
 \author{Sachin Chavan,Tazeb Abera,Gautam Kapila,Sandesh Ojha}
-\date{2021 January 18}
+\date{2021 January 19}
 
 \begin{document}
 \maketitle
@@ -132,7 +132,7 @@ Layout of the building floorplan is depicted in Fig. 1
 
 \begin{figure}[H]
 
-{\centering \includegraphics[width=0.8\linewidth,height=0.6\textheight,]{images/Picture1} 
+{\centering \includegraphics[width=0.5\linewidth,height=0.5\textheight,]{images/Picture1} 
 
 }
 
@@ -320,17 +320,16 @@ file is as follows:
 
 \begin{verbatim}
 ## 'data.frame':    1181628 obs. of  10 variables:
-##  $ time       : num  1.14e+12 1.14e+12 1.14e+12 1.14e+12 1.14e+12 ...
-##  $ scanMac    : chr  "00:02:2D:21:0F:33" "00:02:2D:21:0F:33" "00:02:2D:21:0F:33" "00:02:2D:21:0F:33" ...
-##  $ posX       : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ posY       : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ posZ       : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ orientation: num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ mac        : chr  "00:14:bf:b1:97:8a" "00:14:bf:b1:97:90" "00:0f:a3:39:e1:c0" "00:14:bf:b1:97:8d" ...
-##  $ signal     : num  -38 -56 -53 -65 -65 -66 -75 -78 -87 -88 ...
-##  $ channel    : chr  "2437000000" "2427000000" "2462000000" "2442000000" ...
-##  $ type       : chr  "3" "3" "3" "3" ...
-## NULL
+##  $ time       : num  1.14e+12 1.14e+12 ...
+##  $ scanMac    : chr  "00:02:2D:21:0F:33" "00:02:2D:21:0F:33" ...
+##  $ posX       : num  0 0 0 0 0 ...
+##  $ posY       : num  0 0 0 0 0 ...
+##  $ posZ       : num  0 0 0 0 0 ...
+##  $ orientation: num  0 0 0 0 0 ...
+##  $ mac        : chr  "00:14:bf:b1:97:8a" "00:14:bf:b1:97:90" ...
+##  $ signal     : num  -38 -56 -53 -65 -65 ...
+##  $ channel    : chr  "2437000000" "2427000000" ...
+##  $ type       : chr  "3" "3" ...
 \end{verbatim}
 
 \textbf{Dataframe Summary:}
@@ -384,13 +383,13 @@ Updated Structure of dataframe
 \begin{verbatim}
 ## 'data.frame':    6 obs. of  8 variables:
 ##  $ time   : POSIXt, format: "2006-02-11 01:31:58" "2006-02-11 01:31:58" ...
-##  $ posX   : num  0 0 0 0 0 0
-##  $ posY   : num  0 0 0 0 0 0
-##  $ angle  : num  0 0 0 0 0 0
-##  $ mac    : chr  "00:14:bf:b1:97:8a" "00:14:bf:b1:97:90" "00:0f:a3:39:e1:c0" "00:14:bf:b1:97:8d" ...
-##  $ signal : num  -38 -56 -53 -65 -65 -66
-##  $ rawTime: num  1.14e+12 1.14e+12 1.14e+12 1.14e+12 1.14e+12 ...
-##  $ channel: chr  "2437000000" "2427000000" "2462000000" "2442000000" ...
+##  $ posX   : num  0 0 0 0 0 ...
+##  $ posY   : num  0 0 0 0 0 ...
+##  $ angle  : num  0 0 0 0 0 ...
+##  $ mac    : chr  "00:14:bf:b1:97:8a" "00:14:bf:b1:97:90" ...
+##  $ signal : num  -38 -56 -53 -65 -65 ...
+##  $ rawTime: num  1.14e+12 1.14e+12 ...
+##  $ channel: chr  "2437000000" "2427000000" ...
 \end{verbatim}
 
 As we can see from above structure that mac now has only 7 levels. Which
@@ -449,16 +448,119 @@ Access point locations are the same in training (offline) and test
 (online) dataset. If the locations change, then the signal strength --
 distance metric will change, and model has to be re-built.
 
+\begin{longtable}[]{@{}lrrrrr@{}}
+\caption{Formatted Dataset for KNN Use}\tabularnewline
+\toprule
+posXY & posX & posY & 00:0f:a3:39:e1:c0 & 00:14:bf:3b:c7:c6 &
+00:14:bf:b1:97:81\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+posXY & posX & posY & 00:0f:a3:39:e1:c0 & 00:14:bf:3b:c7:c6 &
+00:14:bf:b1:97:81\tabularnewline
+\midrule
+\endhead
+0-0 & 0 & 0 & -53.47602 & -66.18943 & -64.53751\tabularnewline
+0-1 & 0 & 1 & -52.90871 & -66.17718 & -65.91699\tabularnewline
+0-10 & 0 & 10 & -55.25828 & -65.03161 & -66.36639\tabularnewline
+0-11 & 0 & 11 & -54.16614 & -67.93829 & -68.84551\tabularnewline
+0-12 & 0 & 12 & -54.45000 & -68.17850 & -70.83332\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{msds7333_case_study01_files/figure-latex/unnamed-chunk-8-1} 
+
+}
+
+\caption{Signal Strength for Two Similar Access Points}\label{fig:unnamed-chunk-8}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{msds7333_case_study01_files/figure-latex/unnamed-chunk-10-1} 
+
+}
+
+\caption{Floor Level Errors Using Weighted KNN with 6 Neighbors}\label{fig:unnamed-chunk-10}
+\end{figure}
+
+\newpage
+
 \hypertarget{modeling-scenarios-original-case}{%
 \section{Modeling Scenarios (original
 Case)}\label{modeling-scenarios-original-case}}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{msds7333_case_study01_files/figure-latex/unnamed-chunk-11-1} 
+
+}
+
+\caption{Simple Average kNN - Learning Curves for Each Scenario}\label{fig:unnamed-chunk-11}
+\end{figure}
+
+\begin{longtable}[]{@{}lrr@{}}
+\caption{Simple Average Summary}\tabularnewline
+\toprule
+Access Points & Best K & Error @ Best K\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Access Points & Best K & Error @ Best K\tabularnewline
+\midrule
+\endhead
+C0 & 8 & 1030.984\tabularnewline
+CD & 8 & 1034.328\tabularnewline
+C0CD & 6 & 1091.583\tabularnewline
+\bottomrule
+\end{longtable}
+
+\newpage
 
 \hypertarget{modeling-scenario-extending-case}{%
 \section{Modeling Scenario (extending
 Case)}\label{modeling-scenario-extending-case}}
 
+\begin{figure}[H]
+
+{\centering \includegraphics{msds7333_case_study01_files/figure-latex/unnamed-chunk-13-1} 
+
+}
+
+\caption{Weighted Average kNN - Learning Curves for Each Scenario}\label{fig:unnamed-chunk-13}
+\end{figure}
+
+\begin{longtable}[]{@{}lrr@{}}
+\caption{Weighted Average Summary}\tabularnewline
+\toprule
+Access Points & Best K & Error @ Best K\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Access Points & Best K & Error @ Best K\tabularnewline
+\midrule
+\endhead
+C0 & 8 & 1016.9812\tabularnewline
+CD & 8 & 999.8401\tabularnewline
+C0CD & 6 & 1070.7077\tabularnewline
+\bottomrule
+\end{longtable}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{msds7333_case_study01_files/figure-latex/unnamed-chunk-15-1} 
+
+}
+
+\caption{Best Scenario CD - Simple Avg Vs Weighted Avg kNN}\label{fig:unnamed-chunk-15}
+\end{figure}
+
 \hypertarget{conclusions}{%
 \section{Conclusions}\label{conclusions}}
+
+\newpage
 
 \hypertarget{references}{%
 \section{References}\label{references}}
