@@ -17,4 +17,5 @@ Team Memebers:
 This case study is based on Real time location system. The idea is to learn to build Indoor positioning system using dataset provided which contains measurements of signal strength at 166 different position from 6 access points and the main idea is to build IPS to determine location of the object using signal strength.
 
 Techology usesd : R, Latex
-Referece : Deborah Nolan; Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
+
+Referece : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
