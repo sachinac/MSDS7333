@@ -1,0 +1,140 @@
+---
+title: 'MSDS 7333 Spring 2021: Case Study 02 '
+author: "Sachin Chavan,Tazeb Abera,Gautam Kapila,Sandesh Ojha"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  pdf_document:
+    keep_tex: yes
+    extra_dependencies: float
+  word_document: default
+subtitle: Real Time Location Systems
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Case Study 01}
+latex_engine: pdflatex
+---
+   
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
+library(lattice)
+library(dplyr)
+library(ggplot2)
+```
+# Introduction
+
+
+# Business Understanding
+
+
+
+```{r, echo=FALSE}
+
+```
+
+
+## Objective
+
+
+\newpage
+# Data Evaluation / Engineering
+
+
+
+
+**DataFrame Structure:**
+
+```{r, echo=FALSE}
+
+```
+
+
+
+**Dataframe Summary:**
+
+```{r, echo=FALSE}
+
+```
+
+
+**Updated Structure of DataFrame:**
+
+```{r,echo=FALSE} 
+
+```
+
+
+\newpage
+**Constraints:**
+
+
+
+
+```{r, echo=FALSE}
+
+
+```
+
+```{r, include=TRUE, echo=FALSE, cache=TRUE, warning=FALSE}
+
+
+
+
+```
+
+
+
+\newpage
+# Modeling Scenarios (original Case)
+
+```{r, echo=FALSE}
+```
+
+
+```{r, echo=FALSE}
+```
+
+
+
+
+\newpage
+# Modeling Scenario (extending Case)
+
+
+```{r, echo=FALSE}
+```
+
+
+
+```{r, echo=FALSE}
+
+```
+
+
+**Best Scenario**
+
+```{r, echo=FALSE}
+
+```
+
+
+
+
+```{r, echo=FALSE}
+
+```
+
+\newpage
+# Conclusion
+
+
+
+
+
+# References
+
+<div id="refs">
+[1] Deborah Nolan; Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015.
+
+</div> 
