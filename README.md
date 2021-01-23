@@ -18,4 +18,4 @@ This case study is based on Real time location system. The idea is to learn to b
 
 Techology usesd : R, Latex
 
-Referece : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
+Reference : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
