@@ -4,7 +4,7 @@
 
 This is our last MSDS course at SMU. Team consist of four members to work together on case studies throuhout the semester.
 
-Team Memebers:
+Team Members:
 
 1) Sachin Chavan
 2) Tazeb Abera
