@@ -19,3 +19,8 @@ This case study is based on Real time location system. The idea is to learn to b
 Techology usesd : R, Latex
 
 Reference : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
+
+
+**1) Case Study 02** 
+
+This case study is about analyzing relationship between age and physcial performance of road racers.
