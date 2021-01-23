@@ -21,6 +21,10 @@ Techology usesd : R, Latex
 Reference : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
 
 
-**1) Case Study 02** 
+**2) Case Study 02** 
 
 This case study is about analyzing relationship between age and physcial performance of road racers.
+
+Techology usesd : R, Latex
+
+Reference : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
