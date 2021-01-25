@@ -107,7 +107,7 @@ loadDF <- function(year)
   return(df)
 }
 
-options(java.parameters = "- Xmx2048m")
+
 i = 1
 
 print(paste(Sys.time(),' Loading Data for Year ',' 1999'  ))
@@ -129,3 +129,11 @@ print('Process Completed ')
 # Code to view dataframe
 #df <-read.csv('data/cherry_blossom.csv',sep=';',stringsAsFactors = FALSE,row.names=NULL)
 #view(df)
+
+library(writexl)
+write.xlsx(df,'data/cherry_blossom.xlsx')
+
+
+
+
+
