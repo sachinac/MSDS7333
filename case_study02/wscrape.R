@@ -126,5 +126,6 @@ for(year in 1999:2013)
 print('Process Completed ')
 
 
-
-
+# Code to view dataframe
+#df <-read.csv('data/cherry_blossom.csv',sep=';',stringsAsFactors = FALSE,row.names=NULL)
+#view(df)
