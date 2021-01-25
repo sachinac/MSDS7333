@@ -7,17 +7,18 @@ output:
     keep_tex: yes
     extra_dependencies: float
   word_document: default
-subtitle: Real Time Location Systems
+subtitle: Analysis of Runners’ Times 
 header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
-- \fancyhead[L]{Case Study 01}
+- \fancyhead[L]{Case Study 02}
 latex_engine: pdflatex
 ---
    
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 
 knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
+library(rvest)
 library(lattice)
 library(dplyr)
 library(ggplot2)
