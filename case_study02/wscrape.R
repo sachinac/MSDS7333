@@ -109,16 +109,15 @@ loadDF <- function(year)
 
 
 i = 1
+dfex <- data.frame()
 
-print(paste(Sys.time(),' Loading Data for Year ',' 1999'  ))
-
-for(year in 1999:2013)
+for(year in 1999:2020)
 { 
   print(paste(Sys.time(),' Loading Data for Year ',year ))
   df <- loadDF(year)
-  write.table(df,"data/cherry_blossom.csv",sep = ';',append=TRUE)
-#  df1 <- loadDF(year)
-#  df  <- rbind(df,df1)
+  write.table(df,"data/cherry_blossom_2020.csv",sep = ';',append=TRUE,col.names = if (i==1) T else F)
+  dfex  <- rbind(dfex,df)
+  i = i + 1
 }
 
 #print('Writing to Excel ',nrow(df))
@@ -131,9 +130,14 @@ print('Process Completed ')
 #view(df)
 
 library(writexl)
-write.xlsx(df,'data/cherry_blossom.xlsx')
+write.xlsx(dfex,'data/cherry_blossom_2020.xlsx')
 
 
 
+
+
+#df1 <- data.frame(A=1:10, B=LETTERS[1:10], D=rnorm(10) )
+#df2 <- data.frame(A=11:20, D=rnorm(10), E=letters[1:10] )
+#df3 <- data.frame(A=21:30, D=rnorm(10), E=letters[1:10] )
 
 
