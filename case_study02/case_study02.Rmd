@@ -151,11 +151,12 @@ knitr::kable(cb_parsed_ds[1:5,-c(1,3,12)],caption="Runner's data parsed into dat
 
 ```
 ## Missing values
-As we can see in above table shows there few NAs in the data.These are missing values. Fig 2 shows plot of missing values. It shows there are less than 20 records where Age,PiDTiD, Division is missing and around 70 records where hometown is missing.Missing Age is more of concern than hometown as Age is most crucial for our analysis. But missing values contributes only 0.025% in the required fields.
 
 ```{r, comment=NA,echo=FALSE,fig.align='center',fig.fullwidth=FALSE,fig.cap='Missing Values',fig.width=3,fig.height=2}
 naniar:: gg_miss_var(cb_parsed_ds[,-c(1,3,12)],show_pct = TRUE)
 ```
+
+As we can see in above table shows there few NAs in the data.These are missing values. Fig 2 shows plot of missing values. It shows there are less than 20 records where Age,PiDTiD, Division is missing and around 70 records where hometown is missing.Missing Age is more of concern than hometown as Age is most crucial for our analysis. But missing values contributes only 0.025% in the required fields.
 
 ## Impute or Drop Missing values
 
