@@ -48,6 +48,16 @@
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
 \usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -183,7 +193,7 @@ extract records for our analysis.
 The new Cherry blossom results pages are not dynamic content and it
 makes somewhat easier to pull all required records from the website.
 
-e.g URL for First page of 1999 Women's results for 10 Mile run:
+e.g URL for First page of 1999 Woman's results for 10 Mile run:
 
 \url{http://www.cballtimeresults.org/performances?division=Overall+Women\&page=1\&section=10M\&sex=W\&utf8=\&year=1999}
 
@@ -234,7 +244,7 @@ So to pull data from results web pages following things are required:
 \begin{itemize}
 \tightlist
 \item
-  Use rvest to parse HTML page with required tags. read\_html,
+  Use R rvest package to parse HTML page with required tags. read\_html,
   html\_nodes, html\_text are the supporting functions that will be used
   to extract tabular data.
 \item
@@ -297,13 +307,132 @@ considerations when using web scraping to extract data
   R provides R package to extract data from website, but it does not
   support everything. There are many other tools available with R and
   Python that developers need to keep themselves updated instead of
-  reiventing wheel.
+  reinventing the wheel.
 \end{itemize}
 
 \newpage
 
 \hypertarget{data-extraction-execution}{%
 \section{Data Extraction / Execution}\label{data-extraction-execution}}
+
+First step in extracting data from the website is crawl through
+different web pages by changing parameters in the URL as mentioned in
+previous section. Extract following fields for each runner, which in
+later steps can be restrcutred the desired format.
+
+\begin{longtable}[]{@{}ll@{}}
+\caption{Data Fields on the Website}\tabularnewline
+\toprule
+Field Name & Field Description\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Field Name & Field Description\tabularnewline
+\midrule
+\endhead
+Year & Year of participation\tabularnewline
+Name & Last Name and First Name of the Runner\tabularnewline
+Age & Age\tabularnewline
+Pace & Miles per hour\tabularnewline
+PiSTiS & Rank of the runner in Male/Female category\tabularnewline
+Division & Division\tabularnewline
+PiDTiD & Rank in Runner's Division\tabularnewline
+HomeTown & Runner's Home Town\tabularnewline
+\bottomrule
+\end{longtable}
+
+Data extracted from the wesbite loaded into R dataframe. R's rvest
+package was used to extract data from the HTML page on the Cherry
+Blossom website. All R methods are written in \emph{cs02\_methods.R}
+file. Method \emph{loadDF} calls rvest functions \emph{read\_html},
+\emph{html\_text}, regular expression along with custom made functions
+getURL, getPlayerRecord to read player's record to store into R
+dataframe. Values of the fields were loaded as it is from the HTML
+tables to R dataframe. First five records are as shown in below table.
+
+\begin{longtable}[]{@{}rlrllllll@{}}
+\caption{Runner's data parsed into dataframe}\tabularnewline
+\toprule
+year & name & age & time & Pace & PiSTiS & Division & PiDTiD &
+Hometown\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+year & name & age & time & Pace & PiSTiS & Division & PiDTiD &
+Hometown\tabularnewline
+\midrule
+\endhead
+1999 & Jane Omoro (W) & 26 & 0:53:37 & 5:22 & 1/2358 & W2529 & 1/559 &
+Kenya\tabularnewline
+1999 & Jane Ngotho (W) & 29 & 0:53:38 & 5:22 & 2/2358 & W2529 & 2/559 &
+Kenya\tabularnewline
+1999 & Lidiya Grigoryeva (W) & NA & 0:53:40 & 5:22 & 3/2358 & NA & NA &
+Russia\tabularnewline
+1999 & Eunice Sagero (W) & 20 & 0:53:55 & 5:24 & 4/2358 & W2024 & 1/196
+& Kenya\tabularnewline
+1999 & Alla Zhilyayeva (W) & 29 & 0:54:08 & 5:25 & 5/2358 & W2529 &
+3/559 & Russia\tabularnewline
+\bottomrule
+\end{longtable}
+
+\hypertarget{missing-values}{%
+\subsection{Missing values}\label{missing-values}}
+
+As we can see in above table shows there few NAs in the data.These are
+missing values. Fig 2 shows plot of missing values. It shows there are
+less than 20 records where Age,PiDTiD, Division is missing and around 70
+records where hometown is missing.Missing Age is more of concern than
+hometown as Age is most crucial for our analysis. But missing values
+contributes only 0.025\% in the required fields.
+
+\begin{figure}[H]
+
+{\centering \includegraphics{case_study02_files/figure-latex/unnamed-chunk-6-1} 
+
+}
+
+\caption{Missing Values}\label{fig:unnamed-chunk-6}
+\end{figure}
+
+\hypertarget{impute-or-drop-missing-values}{%
+\subsection{Impute or Drop Missing
+values}\label{impute-or-drop-missing-values}}
+
+In R VIM package can be use to determine MCAR, MAR and MNAR conditions.
+
+\begin{figure}[H]
+
+{\centering \includegraphics{case_study02_files/figure-latex/unnamed-chunk-7-1} 
+
+}
+
+\caption{Missing Values}\label{fig:unnamed-chunk-7}
+\end{figure}
+
+Interpretation of the marginplot goes as follows:
+
+\begin{itemize}
+\tightlist
+\item
+  From the left vertical boxplots, blue is distribution of minutes when
+  age is present
+\item
+  Red boxplot distribution of minutes when age is not present.
+\item
+  Number of missing observations are so few that its difficult to say if
+  age and minutes are different.
+\item
+  Since they are not different it doesn't violate MCAR assumptions.
+\item
+  Values are Missing Completely at random and hence removing these
+  values will not create any bias.
+\item
+  Imputation is not required therefore 19 observations have been
+  removed.
+\end{itemize}
+
+\hypertarget{summary-of-the-data}{%
+\subsection{Summary of the data}\label{summary-of-the-data}}
 
 \newpage
 

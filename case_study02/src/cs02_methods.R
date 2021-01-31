@@ -151,7 +151,25 @@ format_df <- function(df)
     {
       df$mins[i] <- as.numeric(split_time[1])/60
     } 
+
+    df$Pace[i] <- gsub("[^:0-9]","",df$Pace[i])
+    split_Pace <- unlist(strsplit(df$Pace[i],":"))
     
+    if(length(split_Pace)==3) 
+    {
+      df$PaceMins[i] <- as.numeric(split_Pace[1])*60+as.numeric(split_Pace[2])+ as.numeric(split_Pace[3])/60
+    }
+    
+    if(length(split_Pace)==2) 
+    {
+      df$PaceMins[i] <- as.numeric(split_Pace[1])+ as.numeric(split_Pace[2])/60
+    }   
+    
+    if(length(split_Pace)==1) 
+    {
+      df$PaceMins[i] <- as.numeric(split_Pace[1])/60
+    }     
+        
     split_hometown <- unlist(strsplit(df$Hometown[i],","))
     
     if(length(split_hometown) > 1)

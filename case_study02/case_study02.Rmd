@@ -26,13 +26,17 @@ library(dplyr)
 library(ggplot2)
 source('src/cs02_methods.R')
 library(sqldf)
+library(pander)
+library(visdat)
 ```
 
-```{r, echo=FALSE,cache=TRUE }
+```{r, echo=FALSE,cache=TRUE}
 
-cherry_blossom_ds <- read.csv('data/cherry_blossom01_2020.csv' ,sep=';',row.names=NULL,stringsAsFactors = FALSE,header = T)
+cherry_blossom_ds <- read.csv('data/cherry_blossom01_2020.csv' ,sep=';',row.names=NULL,stringsAsFactors = FALSE,header = T,na.strings = c("NR"))
 
+#cb_df <- process_df('data/cherry_blossom_2020.csv')
 
+#write.table(cb_df[,-c(1)],"data/cherry_blossom01_2020.csv",sep = ';',append=FALSE,col.names = T,row.names = F)
 
 #vis_guess(df[1:50000,])
 #vis_guess(df[50000:100000,])
@@ -85,7 +89,7 @@ At the time of writing this document [www.cherryblossom.org](http://www.cherrybl
 
 The new Cherry blossom results pages are not dynamic content and it makes somewhat easier to pull all required records from the website. 
 
-e.g URL for First page of 1999 Women's results for 10 Mile run:
+e.g URL for First page of 1999 Woman's results for 10 Mile run:
 
 http://www.cballtimeresults.org/performances?division=Overall+Women&page=1&section=10M&sex=W&utf8=&year=1999
 
@@ -108,7 +112,7 @@ As seen in screenshot results are presented in tabular format. So web scraping i
 
 So to pull data from results web pages following things are required:
 
-* Use rvest to parse HTML page with required tags. read_html, html_nodes, html_text are the supporting functions that will be used to extract tabular data.
+* Use R rvest package to parse HTML page with required tags. read_html, html_nodes, html_text are the supporting functions that will be used to extract tabular data.
 * Regular expressions are also helpful sometimes to find specic pattern in strings. e.g. time column has specific format HH:MM:SS.Where HH, MM and SS are digits. Regular expressions are useful to check if time column contains data that contains other than colon and digits.
 * Format records returned by **rvest** functions
 * String manipulations are required to format data 
@@ -124,16 +128,55 @@ Web scraping comes with limitations. Programs developed to pull data from the we
 * Websites normally puts restrictions amount of to be extracted in single timeframe so large scale data extraction is harder.
 * Robots.txt - This is very important. This file is used to manage traffic to the website. One should look at this file which is generally located at [http://www.abc.com/robots.txt](http://www.cherryblossom.org/robots.txt) to see if website allows web scraping/crawling. This is not the hard rule to follow what is written in the **robots.txt** but violation could lead to legal troubles.
 * The targeted website can also block web crawler's IP address permanently if guidelines are not followed.
-* R provides R package to extract data from website, but it does not support everything. There are many other tools available with R and Python that developers need to keep themselves updated instead of reiventing wheel.
+* R provides R package to extract data from website, but it does not support everything. There are many other tools available with R and Python that developers need to keep themselves updated instead of reinventing the wheel.
 
 
 
 \newpage
 # Data Extraction / Execution
 
+First step in extracting data from the website is crawl through different web pages by changing parameters in the URL as mentioned in previous section. Extract following fields for each runner, which in later steps can be restrcutred the desired format.
+```{r, include=TRUE, echo=FALSE, cache=TRUE,out.align='left',fig.pos="top",results='markup'}
+FieldName <- c("Year","Name","Age","Pace","PiSTiS","Division","PiDTiD","HomeTown")
+FieldDesc <- c("Year of participation","Last Name and First Name of the Runner","Age","Miles per hour","Rank of the runner in Male/Female category","Division","Rank in Runner's Division","Runner's Home Town")
+df <- data.frame(FieldName,FieldDesc)
+knitr::kable(df,caption="Data Fields on the Website",row.names = FALSE,col.names = c("Field Name","Field Description") )
+```
+Data extracted from the wesbite loaded into R dataframe. R's rvest package was used to extract data from the HTML page on the Cherry Blossom website. All R methods are written in _cs02_methods.R_ file. Method _loadDF_ calls rvest functions _read_html_, _html_text_, regular expression along with custom made functions getURL, getPlayerRecord to read player's record to store into R dataframe. Values of the fields were loaded as it is from the HTML tables to R dataframe. First five records are as shown in below table.
+```{r, include=TRUE, echo=FALSE, cache=TRUE,out.align='left',fig.pos="top",results='markup'}
+cb_parsed_ds <- read.csv('data/cherry_blossom_2020.csv' ,sep=';',row.names=NULL,stringsAsFactors = FALSE,header = T,na.strings = c("NR"))
+cb_parsed_ds <- cb_parsed_ds %>% filter(year < 2013)
+knitr::kable(cb_parsed_ds[1:5,-c(1,3,12)],caption="Runner's data parsed into dataframe",row.names = FALSE )
 
 
+```
+## Missing values
+As we can see in above table shows there few NAs in the data.These are missing values. Fig 2 shows plot of missing values. It shows there are less than 20 records where Age,PiDTiD, Division is missing and around 70 records where hometown is missing.Missing Age is more of concern than hometown as Age is most crucial for our analysis. But missing values contributes only 0.025% in the required fields.
 
+```{r, comment=NA,echo=FALSE,fig.align='center',fig.fullwidth=FALSE,fig.cap='Missing Values',fig.width=3,fig.height=2}
+naniar:: gg_miss_var(cb_parsed_ds[,-c(1,3,12)],show_pct = TRUE)
+```
+
+## Impute or Drop Missing values
+
+In R VIM package can be use to determine MCAR, MAR and MNAR conditions. 
+
+```{r, comment=NA,echo=FALSE,fig.align='center',fig.fullwidth=FALSE,fig.cap='Missing Values'}
+VIM::marginplot(cherry_blossom_ds[,c(4,12)])
+```
+
+
+Interpretation of the marginplot goes as follows:
+
+* From the left vertical boxplots, blue is distribution of minutes when age is present
+* Red boxplot distribution of minutes when age is not present.
+* Number of missing observations are so few that its difficult to say if age and minutes are different.
+* Since they are not different it doesn't violate MCAR assumptions.
+* Values are Missing Completely at random and hence removing these values will not create any bias. 
+* Imputation is not required therefore 19 observations have been removed.
+
+
+## Summary of the data
 \newpage
 # Business Analysis
 
