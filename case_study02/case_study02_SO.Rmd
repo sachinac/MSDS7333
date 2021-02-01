@@ -3,12 +3,12 @@ title: 'MSDS 7333 Spring 2021: Case Study 02 '
 author: "Sachin Chavan,Tazeb Abera,Gautam Kapila,Sandesh Ojha"
 date: "`r format(Sys.time(), '%Y %B %d')`"
 output:
+  html_document:
+    df_print: paged
+  word_document: default
   pdf_document:
     keep_tex: yes
     extra_dependencies: float
-  word_document: default
-  html_document:
-    df_print: paged
 subtitle: Analysis of Runners’ Performance
 header-includes:
 - \usepackage{fancyhdr}
@@ -93,6 +93,7 @@ Web scraping comes with limitations. Programs developed to pull data from the we
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
 library(rvest)
+library(lubridate)
 library(lattice)
 library(dplyr)
 library(ggplot2)

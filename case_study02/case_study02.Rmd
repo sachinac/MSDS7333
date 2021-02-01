@@ -28,37 +28,24 @@ source('src/cs02_methods.R')
 library(sqldf)
 library(pander)
 library(visdat)
+library(ggplot2)
+theme_set(theme_bw())
 ```
 
 ```{r, echo=FALSE,cache=TRUE}
+cb_raw_ds <- read.csv('data/cherry_blossom_2020.csv' ,
+                       sep=';',row.names=NULL,
+                       stringsAsFactors = FALSE,
+                       header = T,na.strings = c("NR"))
 
-cherry_blossom_ds <- read.csv('data/cherry_blossom01_2020.csv' ,sep=';',row.names=NULL,stringsAsFactors = FALSE,header = T,na.strings = c("NR"))
+cb_raw_ds <- cb_raw_ds %>% filter(year < 2013)
 
-#cb_df <- process_df('data/cherry_blossom_2020.csv')
+cb_processed_ds  <- read.csv('data/cherry_blossom01_2020.csv',
+                              sep=';',row.names=NULL,
+                              stringsAsFactors = FALSE,
+                              header = T,na.strings = c("NR"))
 
-#write.table(cb_df[,-c(1)],"data/cherry_blossom01_2020.csv",sep = ';',append=FALSE,col.names = T,row.names = F)
-
-#vis_guess(df[1:50000,])
-#vis_guess(df[50000:100000,])
-#vis_guess(df[100001:nrow(df),])
-
-
-
-#sqldf("select country,count(*) from df group by country order by count(*) desc")
-
-#sqldf("select name,count(*) from df where year <2012 group by name order by count(*) desc")
-
-#table(table(df$name))
-
-
-#sqldf("select * from cb  where gender='F'")
-
-#sqldf("select year,count(*) from cherry_blossom_ds group by year")
-
-#sqldf("select year,count(*)  from df group by year")
-
-
-
+cb_processed_ds <- cb_processed_ds %>% filter(year < 2013)
 
 ```
 
@@ -144,44 +131,130 @@ knitr::kable(df,caption="Data Fields on the Website",row.names = FALSE,col.names
 ```
 Data extracted from the wesbite loaded into R dataframe. R's rvest package was used to extract data from the HTML page on the Cherry Blossom website. All R methods are written in _cs02_methods.R_ file. Method _loadDF_ calls rvest functions _read_html_, _html_text_, regular expression along with custom made functions getURL, getPlayerRecord to read player's record to store into R dataframe. Values of the fields were loaded as it is from the HTML tables to R dataframe. First five records are as shown in below table.
 ```{r, include=TRUE, echo=FALSE, cache=TRUE,out.align='left',fig.pos="top",results='markup'}
-cb_parsed_ds <- read.csv('data/cherry_blossom_2020.csv' ,sep=';',row.names=NULL,stringsAsFactors = FALSE,header = T,na.strings = c("NR"))
-cb_parsed_ds <- cb_parsed_ds %>% filter(year < 2013)
-knitr::kable(cb_parsed_ds[1:5,-c(1,3,12)],caption="Runner's data parsed into dataframe",row.names = FALSE )
-
-
+knitr::kable(cb_raw_ds[1:5,-c(1,3,12)],caption="Runner's data parsed into dataframe",row.names = FALSE )
 ```
 ## Missing values
 
-```{r, comment=NA,echo=FALSE,fig.align='center',fig.fullwidth=FALSE,fig.cap='Missing Values',fig.width=3,fig.height=2}
-naniar:: gg_miss_var(cb_parsed_ds[,-c(1,3,12)],show_pct = TRUE)
-```
-
 As we can see in above table shows there few NAs in the data.These are missing values. Fig 2 shows plot of missing values. It shows there are less than 20 records where Age,PiDTiD, Division is missing and around 70 records where hometown is missing.Missing Age is more of concern than hometown as Age is most crucial for our analysis. But missing values contributes only 0.025% in the required fields.
+
+```{r, comment=NA,echo=FALSE,fig.align='center',fig.fullwidth=FALSE,fig.cap='Missing Values', fig.width=3, fig.height=2}
+naniar::gg_miss_var(cb_raw_ds[,-c(1,3,12)],show_pct = TRUE)
+```
 
 ## Impute or Drop Missing values
 
-In R VIM package can be use to determine MCAR, MAR and MNAR conditions. 
+In R VIM package can be use to determine MCAR, MAR and MNAR conditions on missing data.[3][4]
 
-```{r, comment=NA,echo=FALSE,fig.align='center',fig.fullwidth=FALSE,fig.cap='Missing Values'}
-VIM::marginplot(cherry_blossom_ds[,c(4,12)])
+```{r, comment=NA,echo=FALSE,out.width='.49\\linewidth', fig.width=7, fig.height=6,fig.show='hold',fig.align='left',fig.cap='Missing Values Actions',warning=FALSE}
+VIM::marginplot(cb_processed_ds[,c(4,12)],main= "2a) Margin Plot")
+#
+# Replace NAs in Hometown with
+#
+cb_raw_ds <- cb_raw_ds[-c(which(is.na(cb_raw_ds$age))),-c(1,3,12)] 
+cb_raw_ds[c(which(is.na(cb_raw_ds$Hometown))),]$Hometown <- "UNKNOWN"
+#
+# This player shares position with another player in women category and also in Division
+# therefore replaced <-"961/1257"
+#
+cb_raw_ds[c(which(is.na(cb_raw_ds$PiDTiD))),]$PiDTiD <-"961/1257"
+naniar::gg_miss_var(cb_raw_ds[-c(which(is.na(cb_raw_ds$age))),-c(1,3,12)],show_pct = TRUE)+labs(title= "2b) After handling Missing Values ")
+
 ```
-
 
 Interpretation of the marginplot goes as follows:
 
 * From the left vertical boxplots, blue is distribution of minutes when age is present
 * Red boxplot distribution of minutes when age is not present.
-* Number of missing observations are so few that its difficult to say if age and minutes are different.
-* Since they are not different it doesn't violate MCAR assumptions.
+* Age values are missing at 0.02% also from red and blue boxplot show these distributions are overlapping 
+* Therefore missing values doesn't seem to violate MCAR assumptions.
 * Values are Missing Completely at random and hence removing these values will not create any bias. 
 * Imputation is not required therefore 19 observations have been removed.
+* Missing Hometown values are replaced by "UNKNOWN" hometown.
+* After removing rows with NA in age, only one value is NA in column PiDTiD, upon observation it was found that this player shares rank under women category and they both belong to same Division and apparently shares same rank in the divison as well. Therefore Rank in her division has hard-coded to "961/1257" where 961 is her rank and 1257 is total player in her division.
+* Plot 2b) shows there is nothing missing in the data after handling all missing values.
 
+## Preparing final dataset
+
+Final dataset now contains following fields. Few variables are derived from the original and changed their datatypes as follows.    
+
+e.g. PiDTiD is character string made up of Rank in Division and Total Runners in Division.
+  
+  e.g. 9/100 indicates runner's rank is 9 in his division and there are total 100 runners in his division. These values are split into two columns in the final dataset.
+  
+Table shows which are orignal fields and which are derived and from which it is derived.
+
+```{r, include=TRUE, echo=FALSE, cache=TRUE,out.align='left',fig.pos="top",results='markup'}
+FieldName <- c("Year","Name","Age","mins","PaceMins","rankWomens","TotalWomens",
+               "Division","rankDivision","TotalDivisions","HomeTown","country")
+DataType <- c("Integer","String","Integer","Float","Float","Integer","Integer",
+               "String","Integer","Integer","String","String")
+
+FieldType <- c("Original","Original","Original","Derived from time","Derived from Pace","Derived from PiSTiS","Derived from PiSTiS",
+               "Original","Derived from PiDTiD","Derived from PiDTiD","Original","Derived from Hometown")
+FieldDesc <- c("Year of participation","Last Name and First Name of the Runner","Age","Total Minutes","Miles per hour","Rank in woman's category","Total women particiapants",
+               "Division","Rank in Runner's Division","Total Participants in Division ","Runner's Home Town","Runner's Home Country")
+df <- data.frame(FieldName,FieldType,DataType,FieldDesc)
+knitr::kable(df,caption="Final structure of dataframe",row.names = FALSE,col.names = c("Field Name","Original/Derived","Data Type","Field Description") )
+```
+
+
+**Structure of dataframe**
+
+```{r, comment=NA,echo=FALSE,fig.align='center',fig.fullwidth=FALSE,fig.cap='Missing Values',fig.width=3,fig.height=2}
+cb_processed_ds <- cb_processed_ds[-c(which(is.na(cb_processed_ds$age))),]
+cb_processed_ds[c(which(is.na(cb_processed_ds$Hometown))),]$Hometown <- "UNKNOWN"
+cb_processed_ds[c(which(is.na(cb_processed_ds$PiDTiD))),]$rankDivision <- "9"
+cb_processed_ds[c(which(is.na(cb_processed_ds$PiDTiD))),]$TotalDivisions <- "1257"
+cb_processed_ds[c(which(is.na(cb_processed_ds$PiDTiD))),]$PiDTiD <-"961/1257"
+cb_final_ds <- cb_processed_ds[,c(1,3,4,12,13,15,16,8,17,18,10,14)]
+cb_final_ds$rankDivision <- as.numeric(cb_final_ds$rankDivision)
+```
+
+```{r, comment=NA,echo=FALSE,fig.align='center',fig.fullwidth=FALSE,fig.cap='Missing Values',fig.width=3,fig.height=2}
+str(cb_final_ds,vec.len=3)
+```
 
 ## Summary of the data
+
+```{r, comment=NA,echo=FALSE}
+pandoc.table(summary(cb_final_ds), style='grid')
+```
+
+\newpage
+## Exploratory Data Analysis 
+
+### Age Distributions participation over the years
+
+```{r, echo=FALSE,out.width='.49\\linewidth', fig.width=7, fig.height=6,fig.show='hold',fig.align='left',fig.cap='Year wise Distribution'}
+
+g <- ggplot(cb_final_ds, aes(as.factor(year), age,fill=as.factor(year)))
+g + geom_violin() + 
+  labs(title="Age Distribution", 
+       subtitle="1999-2012",
+       caption="Source: Cherry Blossom",
+       x="Year of Race",
+       y="Age")+ theme(legend.position="none")
+
+df <- sqldf("select year,count(*) total_womens from cb_final_ds group by year order by year")
+
+
+ggplot(df, aes(x=year, y=total_womens)) + 
+  geom_bar(stat="identity", width=.5, fill="tomato3") + 
+  labs(title="Women's Participation in Race", 
+       subtitle="1999-2012", 
+       x="Year of Race",
+       y="Total Womens Participated",
+       caption="source: Cherry Blossom") + 
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))
+
+```
+
+
 \newpage
 # Business Analysis
 
 ```{r, echo=FALSE}
+
 ```
 
 
@@ -199,9 +272,15 @@ Interpretation of the marginplot goes as follows:
 
 # References {-}
 
-<div id="refs">
+
 [1] Deborah Nolan; Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015.
-</div> 
-<div id="refs">
+
 [2] [Sports and exercise among Americans : The Economics Daily: U.S. Bureau of Labor Statistics](https://www.bls.gov/opub/ted/2016/sports-and-exercise-among-americans.htm)
-</div> 
+
+[3] Templ, Matthias & Alfons, Andreas & Filzmoser, Peter. (2012). Exploring incomplete data using visualization techniques. Advances in Data Analysis and Classification. 6. 29-47. 10.1007/s11634-011-0102-y.
+
+[4] [Example of interpretation of VIM::marginplot](https://boostedml.com/2020/05/visualizing-missing-data-in-r-the-basics-with-vim.html#The_Margin_Plot_Checking_Missing_Completely_at_Random_MCAR)
+
+</div>
+
+ 

@@ -1,0 +1,16 @@
+base
+methods
+datasets
+utils
+grDevices
+graphics
+stats
+xml2
+rvest
+lattice
+dplyr
+ggplot2
+proto
+gsubfn
+RSQLite
+sqldf
