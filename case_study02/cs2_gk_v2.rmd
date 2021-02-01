@@ -34,7 +34,11 @@ df$ageRange_gran = cut(df$age,breaks = c(seq(0,90,10)))
 
 age_gran_yr_cnt <- (df %>% group_by(ageRange_gran) %>% count(year) %>% mutate(Nor = n/n[1])) %>% mutate(n_diff = n - lag(n))
 
-age_yr_time <- (df %>% group_by(ageRange_gran,year) %>% mutate(t_median = median(tmins)) %>% mutate(t_min = min(tmins)))
+age_yr_time <- (df %>% group_by(ageRange_gran,year) %>% mutate(t_median = median(tmins)) %>% mutate(t_min = min(tmins))  %>% mutate(t_max = max(tmins)))
+
+yr_time <- (df %>% group_by(year) %>% mutate(t_median = median(tmins)) %>% mutate(t_min = min(tmins))  %>% mutate(t_max = max(tmins)))
+
+
 
 ```
 
@@ -55,6 +59,26 @@ ggplot(age_yr_time)+
   scale_fill_discrete()+
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
+```{r analysis18a, fig.width = 12,echo=TRUE,message=TRUE, warning=FALSE}
+
+ggplot(age_yr_time)+
+  geom_line(aes(x = year, y = t_max, color = ageRange_gran))+
+  labs(title="Maximum runtime \n per Year by Age Group",x="Year", y = "Slowest Runtime, minutes")+
+  scale_fill_discrete()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r analysis18b, fig.width = 12,echo=TRUE,message=TRUE, warning=FALSE}
+
+ggplot(yr_time)+
+  geom_line(aes(x = year, y = t_max), color = "red")+
+  geom_line(aes(x = year, y = t_min), color = "green")+
+  geom_line(aes(x = year, y = t_median), color = "blue")+
+  labs(title="Maximum runtime \n per Year by Age Group",x="Year", y = "Slowest Runtime, minutes")+
+  scale_fill_discrete()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
 
 ```{r analysis17, fig.width = 12,echo=TRUE,message=TRUE, warning=FALSE}
 
@@ -208,9 +232,27 @@ ggplot(df, aes(x=age, color = factor(year)))+
 
 ```{r analysis5, echo=TRUE,message=TRUE, warning=FALSE}
 
-ggplot(df, aes(x=age, color = factor(year)))+
+ggplot(df[df$year==1999 | df$year==2011,], aes(x=age, color = factor(year)))+
   geom_density() + 
   labs(title="Age Distribution by Year",x="Age", y = "Density")+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r analysis5a, echo=TRUE,message=TRUE, warning=FALSE}
+
+ggplot(df)+
+  geom_histogram(aes(x=age)) + 
+  labs(title="Age Distribution",x="Age", y = "Count")+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r analysis5b, echo=TRUE,message=TRUE, warning=FALSE}
+
+ggplot(df)+
+  geom_histogram(aes(x=tmins)) + 
+  labs(title="Runtime Distribution",x="Runtime, minutes", y = "Count")+
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.5))
 ```
