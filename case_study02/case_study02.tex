@@ -75,6 +75,7 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{multicol}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhead[L]{Case Study 02}
@@ -92,7 +93,7 @@
 \makeatother
 \subtitle{Analysis of Runners' Performance}
 \author{Sachin Chavan,Tazeb Abera,Gautam Kapila,Sandesh Ojha}
-\date{2021 February 01}
+\date{2021 February 02}
 
 \begin{document}
 \maketitle
@@ -144,6 +145,23 @@ The race has been in such demand that the runner are chosen via lottery
 system to enter the race. Participants have different age range and for
 both male and female, however, this case study focuses on Woman's
 result.
+
+Specifically we are trying answer following questions in this case
+study:
+
+\begin{itemize}
+\tightlist
+\item
+  Have age distributions changed over the years?
+\item
+  Have race times increased or decreased over that range of time (in
+  total and by age group)?
+\item
+  What trends do you anticipate carrying forward into future years?
+  (i.e., what important insight do you believe is worth sharing to race
+  planners to help them think about the makeup of race runners in the
+  future?)
+\end{itemize}
 
 \hypertarget{objective}{%
 \subsection{Objective}\label{objective}}
@@ -418,7 +436,7 @@ Interpretation of the marginplot goes as follows:
   her division has hard-coded to ``961/1257'' where 961 is her rank and
   1257 is total player in her division.
 \item
-  Plot 2b) shows there is nothing missing in the data after handling all
+  Plot 3b) shows there is nothing missing in the data after handling all
   missing values.
 \end{itemize}
 
@@ -556,21 +574,173 @@ Table: Table continues below
 \hypertarget{exploratory-data-analysis}{%
 \subsection{Exploratory Data Analysis}\label{exploratory-data-analysis}}
 
-\hypertarget{age-distributions-participation-over-the-years}{%
-\subsubsection{Age Distributions participation over the
-years}\label{age-distributions-participation-over-the-years}}
+\hypertarget{age-distributions}{%
+\subsubsection{Age Distributions}\label{age-distributions}}
 
 \begin{figure}[H]
 
-\includegraphics[width=.49\linewidth,]{case_study02_files/figure-latex/unnamed-chunk-12-1} \includegraphics[width=.49\linewidth,]{case_study02_files/figure-latex/unnamed-chunk-12-2} \hfill{}
+{\centering \includegraphics{case_study02_files/figure-latex/unnamed-chunk-12-1} 
 
-\caption{Year wise Distribution}\label{fig:unnamed-chunk-12}
+}
+
+\caption{Yearwise Age Distribution}\label{fig:unnamed-chunk-12}
 \end{figure}
+
+The Age Distribution chart from 1999-2012 shows over the course of time
+the average age has remained relatively constant. 25-30 year olds make
+up majority of the race population and that's consistent throughout the
+years the races were held.
+
+\hypertarget{women-participation}{%
+\subsubsection{Women Participation}\label{women-participation}}
+
+\begin{figure}[H]
+
+\includegraphics[width=.49\linewidth,]{case_study02_files/figure-latex/unnamed-chunk-13-1} \includegraphics[width=.49\linewidth,]{case_study02_files/figure-latex/unnamed-chunk-13-2} \hfill{}
+
+\caption{Women Participation}\label{fig:unnamed-chunk-13}
+\end{figure}
+
+5a)
+
+Looking into the participation, its going up over time, in 1999 they had
+around 2,500 participants and it went up to 100,000 in 2012 almost a 4x
+increase in participation.
+
+5b)
+
+Participation was up among all women age groups over the years. There's
+a significant increase in women aged 20-30(4x) and also 30-40(3.5x)
+participation from 1999 to 2012.
+
+\hypertarget{runtime-distribution}{%
+\subsubsection{Runtime Distribution}\label{runtime-distribution}}
+
+\begin{figure}[H]
+
+\includegraphics[width=.49\linewidth,]{case_study02_files/figure-latex/unnamed-chunk-14-1} \includegraphics[width=.49\linewidth,]{case_study02_files/figure-latex/unnamed-chunk-14-2} \hfill{}
+
+\caption{Runtime Distribution}\label{fig:unnamed-chunk-14}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{case_study02_files/figure-latex/unnamed-chunk-15-1} 
+
+}
+
+\caption{Runtime Distribution}\label{fig:unnamed-chunk-15}
+\end{figure}
+
+6a)
+
+Looking at distributions over different age groups, it clearly shows the
+expected trend that median runtime is larger for larger age - group.
+It's interesting that even the standard deviation of the Runtime is
+slightly increasing, 14.41 minutes to 20.34 minutes, going from age
+group 40-50 to 70-80. This is indicative of larger variation in fitness
+levels of participants at higher age group. 80-90 year age group shows a
+drop-in variation, presumably due to most people participating having
+similar fitness level, and capability. This is not unexpected.
+
+6b)
+
+As far as yearly runtime distribution is concerned, There is minor
+variation in the distribution for all years. Mean Runtime over the year
+has not changed significantly.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi})}
+\setcounter{enumi}{6}
+\tightlist
+\item
+\end{enumerate}
+
+Runtime, when considered over all the age groups, and overall the years,
+shows almost a normal distribution, with minor right skewness.
+
+\hypertarget{longitudinal-analysis-of-individual-runner}{%
+\subsubsection{Longitudinal Analysis of Individual
+runner}\label{longitudinal-analysis-of-individual-runner}}
+
+\begin{figure}[H]
+
+\includegraphics[width=.49\linewidth,]{case_study02_files/figure-latex/unnamed-chunk-16-1} \includegraphics[width=.49\linewidth,]{case_study02_files/figure-latex/unnamed-chunk-16-2} \hfill{}
+
+\caption{Individual Runners}\label{fig:unnamed-chunk-16}
+\end{figure}
+
+The data obtained from the Cherry Blossom doesn't have any field to
+identify runner so these unique players were identified with
+name+hometown combination and they all appears to be common.
+Observations of above plots are as follows
+
+8a)
+
+Shows individual performances of women runners who have completed at
+least 13 races.There are total 9 runners found in the dataset.We can
+clearly see trend and performance of these 9 players over the years. As
+it can be seen in this plot most of the players started their
+competition in early forty years of age and performance of most of them
+are not consistent however, combined plot looks going upward which means
+that performances affected as age increases. i.e.~time to finish race
+increases with age. There is only player seen started her participation
+in early twenties but her performance went down in late thirties.
+
+8b)
+
+Shows individual performances of women runners who have completed at
+least 10 races. There are total 70 runners in this category. Although
+its quite difficult to look for invidual performances, we can see
+overall trend is showing upward i.e.~impact of age on runner's time.
 
 \newpage
 
 \hypertarget{business-analysis}{%
 \section{Business Analysis}\label{business-analysis}}
+
+\hypertarget{change-in-age-profiles}{%
+\subsection{Change in age profiles}\label{change-in-age-profiles}}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{case_study02_files/figure-latex/unnamed-chunk-17-1} 
+
+}
+
+\caption{Age Distribution change 1999 Vs 2012}\label{fig:unnamed-chunk-17}
+\end{figure}
+
+Clear shift to younger population in recent years is noted. Looking at
+kernel density plots between 1999 and 2012, it is clear that there is
+shift towards younger age group.
+
+\begin{figure}[H]
+
+{\centering \includegraphics{case_study02_files/figure-latex/unnamed-chunk-18-1} 
+
+}
+
+\caption{Max. Runtime by Age Group}\label{fig:unnamed-chunk-18}
+\end{figure}
+
+Break up of race times by year, and reviewing median, fastest and
+slowest runtime provides insight on over all race time trend through the
+years. The median runtime and fastest runtime do not show as much
+variation as the slowest Runtime. The standard deviation for different
+time metrics over the years is captured in the below Table.
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule
+Runtime Metric & Standard Deviation of Runtime over 14
+years\tabularnewline
+\midrule
+\endhead
+Min (fastest participant) & 1.22 minutes\tabularnewline
+Median (50th percentile) & 1.89 minutes\tabularnewline
+Max (slowest participant) & 10.18 minutes\tabularnewline
+\bottomrule
+\end{longtable}
 
 \newpage
 

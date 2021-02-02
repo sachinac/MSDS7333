@@ -11,6 +11,7 @@ output:
     df_print: paged
 subtitle: Analysis of Runners’ Performance
 header-includes:
+- \usepackage{multicol}  
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
 - \fancyhead[L]{Case Study 02}
@@ -64,6 +65,12 @@ _"According to Bureau for labor Statistics, road running is third most common fo
 The purpose of the case study is to gather meaningful insights from women participant's results that are published on famous Cherry Blossom' website for the years 1999-2012 under 10 mile race category. The primary objective is to download the 1999 to 2012 results of 10 mile running event from the website to explore and shed light on the effect of age on the runner's physical performance over the years along with other meaningful insights if any. 
 
 The Cherry Blossom organizes 5K and 10M running event year in Washington,D.C early in April when cherry trees are said to be in bloom. They record results for every participants and publish on their website. The race has been in such demand that the runner are chosen via lottery system to enter the race. Participants have different age range and for both male and female, however, this case study focuses on Woman's result.
+
+Specifically we are trying answer following questions in this case study:
+
+* Have age distributions changed over the years?
+* Have race times increased or decreased over that range of time (in total and by age group)?
+* What trends do you anticipate carrying forward into future years? (i.e., what important insight do you believe is worth sharing to race planners to help them think about the makeup of race runners in the future?)
 
 ## Objective
 
@@ -146,7 +153,7 @@ naniar::gg_miss_var(cb_raw_ds[,-c(1,3,12)],show_pct = TRUE)
 In R VIM package can be use to determine MCAR, MAR and MNAR conditions on missing data.[3][4]
 
 ```{r, comment=NA,echo=FALSE,out.width='.49\\linewidth', fig.width=7, fig.height=6,fig.show='hold',fig.align='left',fig.cap='Missing Values Actions',warning=FALSE}
-VIM::marginplot(cb_processed_ds[,c(4,12)],main= "2a) Margin Plot")
+VIM::marginplot(cb_processed_ds[,c(4,12)],main= "3a) Margin Plot")
 #
 # Replace NAs in Hometown with
 #
@@ -157,7 +164,7 @@ cb_raw_ds[c(which(is.na(cb_raw_ds$Hometown))),]$Hometown <- "UNKNOWN"
 # therefore replaced <-"961/1257"
 #
 cb_raw_ds[c(which(is.na(cb_raw_ds$PiDTiD))),]$PiDTiD <-"961/1257"
-naniar::gg_miss_var(cb_raw_ds[-c(which(is.na(cb_raw_ds$age))),-c(1,3,12)],show_pct = TRUE)+labs(title= "2b) After handling Missing Values ")
+naniar::gg_miss_var(cb_raw_ds[-c(which(is.na(cb_raw_ds$age))),-c(1,3,12)],show_pct = TRUE)+labs(title= "3b) After handling Missing Values ")
 
 ```
 
@@ -171,7 +178,7 @@ Interpretation of the marginplot goes as follows:
 * Imputation is not required therefore 19 observations have been removed.
 * Missing Hometown values are replaced by "UNKNOWN" hometown.
 * After removing rows with NA in age, only one value is NA in column PiDTiD, upon observation it was found that this player shares rank under women category and they both belong to same Division and apparently shares same rank in the divison as well. Therefore Rank in her division has hard-coded to "961/1257" where 961 is her rank and 1257 is total player in her division.
-* Plot 2b) shows there is nothing missing in the data after handling all missing values.
+* Plot 3b) shows there is nothing missing in the data after handling all missing values.
 
 ## Preparing final dataset
 
@@ -223,46 +230,182 @@ pandoc.table(summary(cb_final_ds), style='grid')
 \newpage
 ## Exploratory Data Analysis 
 
-### Age Distributions participation over the years
 
-```{r, echo=FALSE,out.width='.49\\linewidth', fig.width=7, fig.height=6,fig.show='hold',fig.align='left',fig.cap='Year wise Distribution'}
+### Age Distributions
 
+```{r, include=TRUE, cache=TRUE, echo=FALSE, warning=FALSE, fig.cap=cap,fig.width=6,fig.height=3,fig.align='center',fig.fullwidth=FALSE}
 g <- ggplot(cb_final_ds, aes(as.factor(year), age,fill=as.factor(year)))
-g + geom_violin() + 
-  labs(title="Age Distribution", 
-       subtitle="1999-2012",
-       caption="Source: Cherry Blossom",
-       x="Year of Race",
+g + geom_boxplot() + 
+    labs(title="Age Distribution", 
+         subtitle="1999-2012",
+         caption="Source: Cherry Blossom",
+         x="Year of Race",
        y="Age")+ theme(legend.position="none")
+cap <- "Yearwise Age Distribution"
+```
+
+The Age Distribution chart from 1999-2012 shows over the course of time the average age has remained
+relatively constant. 25-30 year olds make up majority of the race population and that’s consistent throughout
+the years the races were held.
+
+### Women Participation
+
+```{r, echo=FALSE,out.width='.49\\linewidth', fig.width=7, fig.height=6,fig.show='hold',fig.align='left',fig.cap='Women Participation'}
 
 df <- sqldf("select year,count(*) total_womens from cb_final_ds group by year order by year")
-
-
 ggplot(df, aes(x=year, y=total_womens)) + 
   geom_bar(stat="identity", width=.5, fill="tomato3") + 
-  labs(title="Women's Participation in Race", 
+  labs(title="5a) Women Participation", 
        subtitle="1999-2012", 
        x="Year of Race",
        y="Total Womens Participated",
        caption="source: Cherry Blossom") + 
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 
+yr_cnt  <- count(cb_final_ds,year)
+tformat <- hms(cb_final_ds$time)
+cb_final_ds$ageRange = cut(cb_final_ds$age,breaks = c(0,15,25,45,65,90))
+age_yr_cnt <- (cb_final_ds %>% group_by(ageRange) %>% count(year) %>% mutate(Nor = n/n[1])) %>% mutate(n_diff = n - lag(n))
+cb_final_ds$ageRange_gran = cut(cb_final_ds$age,breaks = c(seq(0,90,10)))
+age_gran_yr_cnt <- (cb_final_ds %>% group_by(ageRange_gran) %>% count(year) %>% mutate(Nor = n/n[1])) %>% mutate(n_diff = n - lag(n))
+
+ggplot(age_gran_yr_cnt, aes(x = year, y = n))+
+  geom_line(aes(color = ageRange_gran))+
+  labs(title="5b) Women Participation \n by Age Group",x="Year of Race", y = "Womens Participants")+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+
 ```
+
+5a) 
+
+Looking into the participation, its going up over time, in 1999 they had around 2,500 participants and it went up to 100,000 in 2012 almost a 4x increase in participation.
+
+5b) 
+
+Participation was up among all women age groups over the years. There’s a significant increase in women aged 20-30(4x) and also 30-40(3.5x) participation from 1999 to 2012.
+
+### Runtime Distribution
+```{r, echo=FALSE,out.width='.49\\linewidth', fig.width=7, fig.height=6,fig.show='hold',fig.align='left',fig.cap='Runtime Distribution'}
+
+ggplot(cb_final_ds, aes(x = ageRange_gran,y = mins,fill=as.factor(ageRange_gran)))+
+   geom_boxplot() + 
+   labs(title="6a) Runtime Distribution by Age Group", 
+        subtitle="1999-2012",
+         caption="Source: Cherry Blossom",
+         x="Age Group",
+         y="Runtime, minutes") + theme(legend.position="none")
+ 
+ggplot(cb_final_ds, aes(x = factor(year), y = mins,fill=as.factor(year)))+
+   geom_boxplot()+
+   labs(title="6b) Runtime Distribution by Year",
+        subtitle="1999-2012",x="Year", y = "Runtime, minutes") + theme(legend.position="none")
+
+```
+
+```{r, comment=NA,include=TRUE, cache=TRUE, echo=FALSE, warning=FALSE,message=FALSE, fig.cap=cap,fig.width=6,fig.height=3,fig.align='center',fig.fullwidth=FALSE}
+ggplot(cb_final_ds)+
+geom_histogram(aes(x=mins)) + 
+    labs(title="Runtime Distribution", 
+         subtitle="1999-2012",
+         caption="Source: Cherry Blossom",
+         x="Runtime, minutes",
+         y="Count")
+cap <- "Runtime Distribution"
+```
+
+6a)
+
+Looking at distributions over different age groups, it clearly shows the expected trend that median runtime is larger for larger age - group. It’s interesting that even the standard deviation of the Runtime is slightly increasing, 14.41 minutes to 20.34 minutes,  going from age group 40-50 to 70-80. This is indicative of larger variation in fitness levels of participants at higher age group. 80-90 year age group shows a drop-in variation, presumably due to most people participating having similar fitness level, and capability. This is not unexpected.
+
+6b)
+
+As far as yearly runtime distribution is concerned, There is minor variation in the distribution for all years. Mean Runtime over the year has not changed significantly.
+
+7)
+
+Runtime, when considered over all the age groups, and overall the years, shows almost a normal distribution, with minor right skewness.
+
+### Longitudinal Analysis of Individual runner 
+
+```{r, echo=FALSE,out.width='.49\\linewidth', fig.width=7, fig.height=6,fig.show='hold',fig.align='left',fig.cap=cap}
+all_years <- sqldf("select name,hometown,count(distinct year) played_cnt from cb_final_ds group by name,hometown order by count(distinct year) desc")
+df <- sqldf("select cb.name,cb.year,cb.age,cb.mins from cb_final_ds cb, all_years ay where ay.name=cb.name and ay.hometown=cb.hometown and played_cnt>=13")
+
+ggplot(df,aes(x=age, y=mins)) + 
+geom_line(aes(colour=as.factor(name))) +
+geom_point(size=0.1) + 
+labs(title="8a) At least 13 Race Completed", 
+     subtitle="1999-2012",
+     caption="Source: Cherry Blossom",
+     x="Age",
+     y="Runtime, minutes") + theme(legend.position="none")
+
+df <- sqldf("select cb.name,cb.year,cb.age,cb.mins from cb_final_ds cb, all_years ay where ay.name=cb.name and ay.hometown=cb.hometown and played_cnt>=10")
+
+ggplot(df,aes(x=age, y=mins)) + 
+geom_line(aes(colour=as.factor(name))) +
+labs(title="8b) At least 10 Race Completed", 
+     subtitle="1999-2012",
+     caption="Source: Cherry Blossom",
+     x="Age",
+     y="Runtime, minutes") + theme(legend.position="none")
+
+cap <- "Individual Runners"
+```
+
+The data obtained from the Cherry Blossom doesn't have any field to identify runner so these unique players were identified with name+hometown combination and they all appears to be common. Observations of above plots are as follows
+
+8a)
+
+Shows individual performances of women runners who have completed at least 13 races.There are total 9 runners found in the dataset.We can clearly see trend and performance of these 9 players over the years. As it can be seen in this plot most of the players started their competition in early forty years of age and performance of most of them are not consistent however, combined plot looks going upward which means that performances affected as age increases. i.e. time to finish race increases with age. There is only player seen started her participation in early twenties but her performance went down in late thirties. 
+
+8b) 
+
+Shows individual performances of women runners who have completed at least 10 races. There are total 70 runners in this category. Although its quite difficult to look for invidual performances, we can see overall trend is showing upward i.e. impact of age on runner's time.
 
 
 \newpage
+
 # Business Analysis
 
-```{r, echo=FALSE}
+## Change in age profiles 
 
+```{r, comment=NA,include=TRUE, cache=TRUE, echo=FALSE, warning=FALSE,message=FALSE, fig.cap=cap,fig.width=4,fig.height=3,fig.align='center',fig.fullwidth=FALSE}
+
+cb_final_ds %>% filter(year==1999 | year==2012) %>% 
+            ggplot(aes(x=age, fill = factor(year)))+
+            geom_density() + 
+  labs(title="Age Distribution by Year",x="Age", y = "Density",fill='Year')
+
+cap <- "Age Distribution change 1999 Vs 2012"
+```
+Clear shift to younger population in recent years is noted. Looking at kernel density plots between 1999 and 2012, it is clear that there is shift towards younger age group.
+
+
+```{r, comment=NA,include=TRUE, cache=TRUE, echo=FALSE, warning=FALSE,message=FALSE, fig.cap=cap,fig.width=4,fig.height=3,fig.align='center',fig.fullwidth=FALSE}
+
+yr_time <- (cb_final_ds %>% group_by(year) %>% mutate(t_median = median(mins)) %>% mutate(t_min = min(mins))  %>% mutate(t_max = max(mins)))
+
+ggplot(yr_time)+
+  geom_line(aes(x = year, y = t_max), color = "red")+
+  geom_line(aes(x = year, y = t_min), color = "green")+
+  geom_line(aes(x = year, y = t_median), color = "blue")+
+  labs(title="Maximum runtime \n per Year by Age Group",x="Year", y = "Slowest Runtime, minutes")+
+  scale_fill_discrete()+
+  theme(plot.title = element_text(hjust = 0.5))
+
+cap <- "Max. Runtime by Age Group"
 ```
 
 
-```{r, echo=FALSE}
-```
+Break up of race times by year, and reviewing median, fastest and slowest runtime provides insight on over all race time trend through the years. The median runtime and fastest runtime do not show as much variation as the slowest Runtime. The standard deviation for different time metrics over the years is captured in the below Table.
 
-
-
+Runtime Metric|Standard Deviation of Runtime over 14 years
+--------------|-------------------------------------------------
+Min (fastest participant)|1.22 minutes
+Median (50th percentile)|1.89 minutes
+Max (slowest participant)|10.18 minutes
 
 \newpage
 
