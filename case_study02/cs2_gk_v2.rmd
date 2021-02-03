@@ -28,9 +28,11 @@ df$tmins <- hour(tformat)*60 + minute(tformat)  + second(tformat)/60
 
 df$ageRange = cut(df$age,breaks = c(0,15,25,45,65,90))
 
-age_yr_cnt <- (df %>% group_by(ageRange) %>% count(year) %>% mutate(Nor = n/n[1])) %>% mutate(n_diff = n - lag(n))
+age_yr_cnt <- (df %>% group_by(ageRange) %>% count(year) %>% mutate(Nor = n/n[1])) %>% mutate(n_diff = n - lag(n)) %>% mutate(pPop = 100*n/sum(n))
 
 df$ageRange_gran = cut(df$age,breaks = c(seq(0,90,10)))
+
+yr_age_cnt <- (df %>% group_by(year) %>% count(ageRange_gran) %>% mutate(pPop = 100*n/sum(n)))
 
 age_gran_yr_cnt <- (df %>% group_by(ageRange_gran) %>% count(year) %>% mutate(Nor = n/n[1])) %>% mutate(n_diff = n - lag(n))
 
@@ -38,8 +40,21 @@ age_yr_time <- (df %>% group_by(ageRange_gran,year) %>% mutate(t_median = median
 
 yr_time <- (df %>% group_by(year) %>% mutate(t_median = median(tmins)) %>% mutate(t_min = min(tmins))  %>% mutate(t_max = max(tmins)))
 
+lm.model <- lm(t_max ~ year, yr_time)
 
+ggplot(yr_time, aes(x=year, y=t_max))+
+    geom_point()+
+    geom_smooth(method=lm, se=TRUE)
 
+```
+
+```{r analysis20, echo=TRUE,message=TRUE, warning=FALSE}
+
+ggplot(yr_age_cnt, aes(x = year, y = pPop))+
+  geom_line(aes(color = ageRange_gran))+
+  labs(title="% Women Runners over the years \n by Age Group",x="Year", y = "% Runner population, #")+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r analysis19, fig.width = 12,echo=TRUE,message=TRUE, warning=FALSE}
