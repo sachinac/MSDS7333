@@ -1,0 +1,352 @@
+---
+title: 'Case Study 3'
+author: "Sandesh Modeling Draft"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r, echo=TRUE, message=TRUE}
+
+# Load necessary package libraries
+library(data.table)
+library(tidyverse)
+#install.packages("caret")
+library(caret)
+library(rpart)
+#install.packages("rpart.plot")
+library(rpart.plot)
+#install.packages("randomForest")
+library(randomForest)
+#install.packages("gbm")
+library(gbm)
+#install.packages("corrgram")
+library(corrgram)
+library(corrplot)
+#install.packages("skimr")
+library(skimr)
+#install.packages("rattle")
+library(rattle)
+library(RColorBrewer)
+#install.packages("ROCR")
+library(ROCR)
+#install.packages("broom")
+library(broom)
+#install.packages("e1071")
+library("e1071")
+library("tidyr")
+```
+
+```{r, echo=TRUE, message=TRUE}
+# Define Helper functions
+
+detectNA <- function(inp) {
+  sum(is.na(inp))
+}
+
+detectCor <- function(x) {
+  cor(as.numeric(emailDFrp[, x]), 
+    as.numeric(emailDFrp$isSpam), 
+    method="spearman")
+}
+
+```
+
+
+
+```{r setup, echo=TRUE, message=TRUE}
+# Load data
+gk_wd = "C:/Users/a0875458/Documents/My Data/IDP/Masters/Sem 6 - 09 - 7333 - Quantifying The World/Week 5/Week_5_QTW"
+
+setwd(gk_wd)
+
+load("data.rda")
+```
+
+# Exploratory Analysis 
+
+
+```{r, echo=TRUE, message=TRUE}
+ # summarize the data to look at counts, datatypes, and other information.
+ skim(emailDFrp)
+```
+
+```{r, echo=TRUE, message=TRUE, results='hide'}
+#omit and NAs if found in the data set
+emailDFrp = na.omit(emailDFrp)
+skim(emailDFrp)
+```
+
+```{r, echo=TRUE, message=TRUE}
+#Look at the frequency distribution of spam in our data
+dfrQltyFreq <- summarise(group_by(emailDFrp, isSpam), count=n())
+
+# plot the number of spam vs non-spam message in the data
+ggplot(dfrQltyFreq, aes(x=isSpam, y=count)) +
+    geom_bar(stat="identity", aes(fill=count)) +
+    labs(title="Figure 1: isSpam Feature Frequency Distribution") +
+    labs(x="isSpam") +
+    labs(y="Counts")
+```
+
+
+```{r}
+emailDFrp %>% 
+  ggplot(mapping = aes(x= isInReplyTo, fill = isSpam))+
+  geom_bar() + 
+  labs(title="Figure 1b: isSpam vs. isinReplyTo Values") +
+    labs(x="isinReplyTo") +
+    labs(y="Counts")
+
+```
+```{r}
+emailDFrp %>% 
+  ggplot(mapping = aes(x= priority, fill = isSpam))+
+  geom_bar() +
+  labs(title="Figure 1c: isSpam vs. priority Values") +
+  labs(x="Priority") +
+  labs(y="Counts")
+```
+
+```{r}
+emailDFrp %>% 
+  ggplot(mapping = aes(x= isPGPsigned, fill = isSpam))+
+  geom_bar() + 
+  labs(title="Figure 1d: isSpam vs. isPGPSigned Values") +
+  labs(x="isPGPSigned") +
+  labs(y="Counts")
+```
+
+
+```{r, echo=TRUE, message=TRUE, results='hide'}
+
+# find correlations
+Corr_DF <- abs(sapply(colnames(emailDFrp), detectCor)) #absolute value
+
+summary(Corr_DF)
+```
+```{r, echo=TRUE, message=TRUE}
+
+# One Hot Encode the dataframe to run correlation plots
+OHE_emailDRrp = copy(emailDFrp)
+
+cols <- sapply(OHE_emailDRrp, is.factor)
+
+#convert all the factors to character values
+OHE_emailDRrp[,cols] <- lapply(OHE_emailDRrp[,cols], function(x) as.character(x))
+
+#convert the character value t/f to 1/0 respectively
+OHE_emailDRrp[,cols] <- lapply(OHE_emailDRrp[,cols], function(x) gsub("T", "1", x))
+OHE_emailDRrp[,cols] <- lapply(OHE_emailDRrp[,cols], function(x) gsub("F", "0", x))
+
+#convert the character 1/0 to numberis
+OHE_emailDRrp[,cols] <- lapply(OHE_emailDRrp[,cols], function(x) as.numeric(x))
+
+
+corrplot(cor(OHE_emailDRrp[c(2:10,1)]))
+corrplot(cor(OHE_emailDRrp[c(10:20,1)]))
+corrplot(cor(OHE_emailDRrp[c(20:30,1)]))
+
+```
+
+# Data Analysis
+
+80/20 split of test and train data set
+
+```{r, echo=TRUE, message=TRUE}
+# build out training and test data. We'll use an 80/20 split to start
+set.seed(100)
+cntTrainRecs = createDataPartition(y=emailDFrp$isSpam,p=0.8,list=FALSE)
+train_df = emailDFrp[cntTrainRecs,]
+test_df = emailDFrp[-cntTrainRecs,]
+
+dim(train_df)
+dim(test_df)
+```
+## Basic Tree Model
+
+```{r, echo=TRUE, message=TRUE, warning=FALSE}
+
+cp_val <- c(0.001,seq(0.001,0.1,0.01),0.1)
+#cp_val <- 0.001*2^seq(1,10,1)
+
+df_cv  <- data.frame(matrix(nrow = length(cp_val), ncol = 4))
+acc     <- vector(length = length(cp_val))
+spec    <- vector(length = length(cp_val))
+sens    <- vector(length = length(cp_val))
+
+
+for (i in 1:length(cp_val)) {
+  # print(cp_val[i])
+  model = rpart(formula=isSpam~.,
+                data=train_df,
+                method="class",
+                parms = list(split = "information"), 
+                cp = cp_val[i]
+                )
+  predTest <- predict(object=model, newdata=test_df, type="class")
+  cm    <- confusionMatrix(data=predTest, reference=test_df$isSpam, positive ="T")
+  acc[i]   <- cm$overall['Accuracy']
+  spec[i]  <- specificity(data=predTest, reference=test_df$isSpam, negative = "F")
+  sens[i]  <- sensitivity(data=predTest, reference=test_df$isSpam, positive = "T")
+  
+  # df_cv$cv      <- val
+  # df_cv$acc     <- acc
+  # df_cv$spec    <- spec
+  # df_cv$sens    <- sens
+}
+
+df_cp_wide <- data.frame(cp = cp_val, accuracy = acc, specificity = spec, sensitivity = sens)
+
+keycol <- "metric"
+valuecol <- "value"
+gathercols <- c("accuracy", "sensitivity", "specificity")
+
+df_cp <- gather_(df_cp_wide, keycol, valuecol, gathercols)
+
+ggplot()+
+  geom_point(data = df_cp, aes(x =  cp,y=value, color = metric))+
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5))+
+  # scale_y_log10()+
+  scale_x_log10()+
+  # annotation_logticks(sides = "bl")+
+  labs(title="Metrics vs. Complexity Factor (CP)",x="cp")
+
+
+# fancyRpartPlot(model,caption="Initial Tree")
+# summary(model)
+# predTest = predict(object=model, newdata=test_df, type="class")
+# confusionMatrix(data=predTest, reference=test_df$isSpam, positive ="T")
+# specificity(data=predTest, reference=test_df$isSpam, negative = "F")
+# # plotcp(model)
+# rpart.rules(model)
+
+df_cp_wide
+
+```
+
+```{r, echo=TRUE, message=TRUE, warning=FALSE}
+model = rpart(formula=isSpam~.,
+              data=train_df,
+              method="class",
+              parms = list(split = "information"),
+              cp = 0.1,                           # no size penalty
+             # maxdepth = 4,                         # defines the maximum depth a tree can grow
+             # minsplit = 2,                         # Nodes of size 5 (or # more) can be split,
+             # minbucket = 1,                        # provided each sub-node contains at least 2 ob
+             )
+
+fancyRpartPlot(model,caption="Initial Tree")
+# summary(model)
+predTest = predict(object=model, newdata=test_df, type="class")
+confusionMatrix(data=predTest, reference=test_df$isSpam, positive ="T")
+# plotcp(model)
+# rpart.rules(model)
+```
+
+```{r, echo=TRUE, message=TRUE, warning=FALSE}
+model = rpart(formula=isSpam~.,
+              data=train_df,
+              method="class",
+              parms = list(split = "information"),
+              cp = 0.031,                           # no size penalty
+             # maxdepth = 4,                         # defines the maximum depth a tree can grow
+             # minsplit = 2,                         # Nodes of size 5 (or # more) can be split,
+             # minbucket = 1,                        # provided each sub-node contains at least 2 ob
+             )
+
+fancyRpartPlot(model,caption="Initial Tree")
+# summary(model)
+predTest = predict(object=model, newdata=test_df, type="class")
+confusionMatrix(data=predTest, reference=test_df$isSpam, positive ="T")
+# plotcp(model)
+# rpart.rules(model)
+```
+
+
+```{r, echo=TRUE, message=TRUE, warning=FALSE}
+model = rpart(formula=isSpam~.,
+              data=train_df,
+              method="class",
+              parms = list(split = "information"),
+              cp = 0.01,                           # no size penalty
+             # maxdepth = 4,                         # defines the maximum depth a tree can grow
+             # minsplit = 2,                         # Nodes of size 5 (or # more) can be split,
+             # minbucket = 1,                        # provided each sub-node contains at least 2 ob
+             )
+
+fancyRpartPlot(model,caption="Initial Tree")
+# summary(model)
+predTest = predict(object=model, newdata=test_df, type="class")
+confusionMatrix(data=predTest, reference=test_df$isSpam, positive ="T")
+# plotcp(model)
+# rpart.rules(model)
+```
+
+```{r, echo=TRUE, message=TRUE, warning=FALSE}
+model = rpart(formula=isSpam~.,
+              data=train_df,
+              method="class",
+              parms = list(split = "information"),
+              cp = 0.001,                           # no size penalty
+             # maxdepth = 4,                         # defines the maximum depth a tree can grow
+             # minsplit = 2,                         # Nodes of size 5 (or # more) can be split,
+              # minbucket = 100,                        # provided each sub-node contains at least 2 ob
+             )
+
+fancyRpartPlot(model,caption="Initial Tree")
+# summary(model)
+predTest = predict(object=model, newdata=test_df, type="class")
+confusionMatrix(data=predTest, reference=test_df$isSpam, positive ="T")
+# plotcp(model)
+# rpart.rules(model)
+```
+
+
+```{r, echo=TRUE, message=TRUE, warning=FALSE}
+model = rpart(formula=isSpam~.,
+              data=train_df,
+              method="class",
+              parms = list(split = "information"),
+              cp = 0.001,                           # no size penalty
+             # maxdepth = 4,                         # defines the maximum depth a tree can grow
+             # minsplit = 2,                         # Nodes of size 5 (or # more) can be split,
+              minbucket = 100,                        # provided each sub-node contains at least 2 ob
+             )
+
+fancyRpartPlot(model,caption="Initial Tree")
+# summary(model)
+predTest = predict(object=model, newdata=test_df, type="class")
+confusionMatrix(data=predTest, reference=test_df$isSpam, positive ="T")
+# plotcp(model)
+# rpart.rules(model)
+```
+
+# ```{r, echo=TRUE, message=TRUE, warning=FALSE}
+# pruneModel = prune(model, cp=model$cptable[which.min(model$cptable[,"xerror"]),"CP"])
+# fancyRpartPlot(pruneModel,caption="Pruned Tree")
+# ```
+#
+# ```{r, echo=TRUE, message=TRUE, warning=FALSE}
+# predTest = predict(object=pruneModel, newdata=test_df, type="class")
+# confusionMatrix(data=predTest, reference=test_df$isSpam)
+# ```
+#
+ <!-- ```{r,echo=TRUE, message=TRUE} -->
+ <!-- set.seed(100) -->
+ <!-- cv5 = createMultiFolds(train_df$isSpam,k=5,times=5) -->
+ <!-- control = trainControl(method="repeatedcv", number=5, repeats=5, index=cv5) -->
+
+ <!-- modelCV = train(x=train_df[,-1],y=train_df[,1], method="rpart", tuneLength=30,trControl=control) -->
+
+ <!-- fancyRpartPlot(modelCV$finalModel, caption="CV Tree - Initial") -->
+ ```
+#
+# ```{r,echo=TRUE, message=TRUE}
+# predTest = predict(object=modelCV$finalModel, newdata=test_df, type="class")
+# confusionMatrix(data=predTest, reference=test_df$isSpam)
+# ```
+
+
