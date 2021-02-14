@@ -31,7 +31,7 @@ Reference : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hal
 
 **3) Case Study 03** 
 
-This case study is about Evaluation of tree based model's ability to classify spams or no-spams emails. 
+This case study is about evaluation of tree based model's ability to classify spams or no-spams emails. 
 
 Techology : R, Latex
 
