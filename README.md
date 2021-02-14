@@ -2,7 +2,7 @@
 
 **Quantifying The World**
 
-This is our last MSDS course at SMU. Team consist of four members to work together on case studies throuhout the semester.
+This is our last MSDS course at SMU. Team consist of four members to work together on case studies throughout the semester.
 
 Team Members:
 
