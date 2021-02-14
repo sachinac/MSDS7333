@@ -28,3 +28,12 @@ This case study is about analyzing relationship between age and physcial perform
 Techology : R, Latex
 
 Reference : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
+
+**3) Case Study 03** 
+
+This case study is about Evaluation of tree based model's ability to classify spams or no-spams emails. 
+
+Techology : R, Latex
+
+Reference : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
+
