@@ -65,11 +65,27 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{siunitx}
+\newcolumntype{d}{S[table-format=3.2]}
 \usepackage{multicol}
+\usepackage{float}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhead[L]{Case Study 03}
 \usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
 \ifluatex
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -83,7 +99,7 @@
 \makeatother
 \subtitle{Email Spam Detection}
 \author{Sachin Chavan,Tazeb Abera,Gautam Kapila,Sandesh Ojha}
-\date{2021 February 13}
+\date{2021 February 18}
 
 \begin{document}
 \maketitle
@@ -91,10 +107,79 @@
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
+\textbf{E}mail spams are unsolicited emails that also referred as Junk
+email sent in bulk. There is no law at least in United States that
+prevents anybody from sending unsolicited emails whether in single email
+or in bulk. Research indicate that email spams are accounted for over
+80\% of total email traffic.\(^{[2][3][4]}\). There are different forms
+of email spams or unsolicited emails that may affect either individuals
+or organizations. Following are the few of them :
+
+\begin{itemize}
+\tightlist
+\item
+  Commercial Advertisements
+\item
+  Hoax emails
+\item
+  Emails Spoofs or phishing
+\item
+  Lottery winining notification is very common
+\item
+  Money Scams
+\item
+  Virus/Malware
+\end{itemize}
+
+All these can adversely affect individual as well as organizations. Such
+emails comes from unknown sources that we never interacted with or
+sometimes spammers use spoofing techniques to mislead recipients to
+appear as valid source. Organizations also takes advantage to send bulk
+emails to potential customers to advertise their products.Such bulk
+emails occupies network traffic all the time. Human can easily
+categorize suche mails and trash them manaually
+
+Now a days different machine learning algorithm are used for detecting
+and daily inspecting for incoming emails by different email provider
+companies like google, yahoo and the like. Among these machine learning
+algorithms decision tree methods are one of the best list.
+
 \newpage
 
 \hypertarget{business-understanding}{%
 \section{Business Understanding}\label{business-understanding}}
+
+The two common approaches used for filtering spam mails are knowledge
+engineering and machine learning. Emails are classified as either spam
+or ham using a set of rules in knowledge engineering \(^{[4]}\). Machine
+learning approach have proved to be more efficient than knowledge
+engineering approach. No rule is required to be specified, rather a set
+of training samples which are pre-classified email messages are
+provided. A particular machine learning algorithm is then used to learn
+the classification rules from these email messages.
+
+Machine learning algorithms use statistical models to classify data. In
+the case of spam detection, a trained machine learning model must be
+able to determine whether the sequence of words found in an email are
+closer to those found in spam emails or safe ones.
+
+Several studies have been carried out on machine learning techniques and
+many of these algorithms are being applied in the field of email spam
+filtering. Examples of such algorithms include Deep Learning, Naïve
+Bayes, Decision tree, Support Vector Machines, Neural Networks,
+K-Nearest Neighbor, Rough sets, and Random Forests.
+
+For this case study we are implementing a a decision tree algorithms.
+Decision tree learning is the predictive modeling approaches used in
+statistics, data mining and machine learning. It uses a decision tree to
+go from observations about an item to conclusions about the item's
+target value. {[}Wikipedia{]}. We explore a decision tree package in R
+called rpart, which is short for recursive partitioning.
+
+Our objective is to investigate and optimize key hyperparameters used in
+the rpart package in order to classify email messages as spam or Ham
+email. In order to accomplish this, we fit a default decision tree and
+an optimized decision tree and compare them.
 
 \newpage
 
@@ -102,15 +187,547 @@
 \section{Data Evaluation /
 Engineering}\label{data-evaluation-engineering}}
 
+The dataset provided for this cases study was preprocessed and labeled
+already and contains features extracted from after preprocessing. It
+contains total of 9348 unique emails with 29 predictor variables and one
+response variable named isSpam. Of the 30 total variables, 17 are
+boolean factor variables and the remaining 13 variables are numeric
+variables. Each email has been previously classified as spam or valid.
+This dataset will be used to build a model using decision trees to
+classify email messages as spam or ham. Details of each feature is as
+follows:
+
+\hypertarget{factor-variables}{%
+\subsection{Factor variables}\label{factor-variables}}
+
+\begin{table}[H]
+\centering
+\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{30em}}
+\toprule
+Feature & Description\\
+\midrule
+isSpam & Target Variable (T=Spam/F=Ham)\\
+isRe & T=If subject starts with Re: F=Otherwise\\
+underscore & T=If FROM email address field contains underscore F=Otherwise\\
+priority & T=If priority key present in the header F=Otherwise\\
+isInReplyTo & T=If inReplyTo present in the header F=Otherwise\\
+\addlinespace
+sortedRec & T=If Recipient's email addresses are sorted F=Otherwise\\
+subPunc & T=if Subject line contains punctuation F=Otherwise\\
+multipartText & T=If MIME type is multipart/text F=otherwise\\
+hasImages & T=If email body contains images F=Otherwise\\
+isPGPsigned & T=If message contains PGP signature F=Otherwise\\
+\addlinespace
+subSpamWords & T=If subject contains one of the words from spam vector F=Otherwise\\
+noHost & T=If there is no hostname in header F=Otherwise\\
+numEnd & T=If sender's email address ends with number\\
+isYelling & T=If subject line contains all uppercase letters F=Otherwise\\
+isOrigMsg & T=If Message body contains word original message F=Otherwise\\
+\addlinespace
+isDear & T=If word dear found in message body F=Otherwise\\
+isWrote & T=if message body contains word Wrote: F=Otherwise\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\hypertarget{numeric-variables}{%
+\subsection{Numeric variables}\label{numeric-variables}}
+
+\begin{table}[H]
+\centering
+\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{30em}}
+\toprule
+Feature & Description\\
+\midrule
+numLines & Number of Lines in the message\\
+bodyCharCt & Number of characters in the messsage\\
+subExcCt & Number of Exclamation in Subject line\\
+subQuesCt & Number of question marks in subject line\\
+numAtt & Number of email attachments\\
+\addlinespace
+numRec & Number of Recipients in the email message\\
+perCaps & Percentage of uppercase letters in the Body of the message\\
+hour & Hour of the day\\
+perHTML & Percentage of HTML tags in the body of the message\\
+subBlanks & Percentage blanks in Subject line\\
+\addlinespace
+forwards & Number of consecutive forward symbols in the body of the message\\
+avgWordLen & Average length of the word in the body of the message\\
+numDlr & Number of dollar symbol in the message body\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\hypertarget{structure-of-dataframe}{%
+\subsection{Structure of dataframe}\label{structure-of-dataframe}}
+
+As shown below this dataframe contains 30 columns and 9348 observations.
+
+\begin{verbatim}
+'data.frame':   9348 obs. of  30 variables:
+ $ isSpam       : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ isRe         : Factor w/ 2 levels "F","T": 2 1 1 1 2 2 1 2 ...
+ $ underscore   : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ priority     : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ isInReplyTo  : Factor w/ 2 levels "F","T": 2 1 1 1 1 2 1 1 ...
+ $ sortedRec    : Factor w/ 2 levels "F","T": 2 2 2 2 2 2 2 2 ...
+ $ subPunc      : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ multipartText: Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ hasImages    : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ isPGPsigned  : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ subSpamWords : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ noHost       : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ numEnd       : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ isYelling    : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ isOrigMsg    : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ isDear       : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 ...
+ $ isWrote      : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 2 ...
+ $ numLines     : int  50 26 38 32 31 25 38 39 ...
+ $ bodyCharCt   : int  1554 873 1713 1095 1021 718 1288 1182 ...
+ $ subExcCt     : int  0 0 0 0 0 0 0 0 ...
+ $ subQuesCt    : int  0 0 0 0 0 0 0 0 ...
+ $ numAtt       : num  0 0 0 0 0 0 0 0 ...
+ $ numRec       : int  2 1 1 0 1 1 1 1 ...
+ $ perCaps      : num  4.45 7.49 7.44 5.09 ...
+ $ hour         : num  11 11 12 13 13 13 13 14 ...
+ $ perHTML      : num  0 0 0 0 0 0 0 0 ...
+ $ subBlanks    : num  12.5 8 8 18.9 ...
+ $ forwards     : num  0 0 0 3.12 ...
+ $ avgWordLen   : num  4.38 4.56 4.82 4.71 ...
+ $ numDlr       : int  3 0 0 0 0 0 0 0 ...
+\end{verbatim}
+
+\hypertarget{summary-of-factor-variables}{%
+\subsection{Summary of Factor
+Variables}\label{summary-of-factor-variables}}
+
+\begin{verbatim}
+ isSpam   isRe     underscore priority isInReplyTo sortedRec subPunc 
+ F:6951   F:6343   F:9222     F:9294   F:6556      F: 948    F:9085  
+ T:2397   T:3005   T: 126     T:  54   T:2792      T:8400    T: 263  
+                                                                     
+ multipartText hasImages isPGPsigned subSpamWords  noHost     numEnd  
+ F:9020        F:9326    F:9172      F   :8697    F   :9318   F:8209  
+ T: 328        T:  22    T: 176      T   : 644    T   :  29   T:1139  
+                                     NA's:   7    NA's:   1           
+ isYelling   isOrigMsg isDear   isWrote 
+ F   :9134   F:8988    F:9270   F:7442  
+ T   : 207   T: 360    T:  78   T:1906  
+ NA's:   7                              
+\end{verbatim}
+
+\hypertarget{summary-of-numeric-variables}{%
+\subsection{Summary of Numeric
+Variables}\label{summary-of-numeric-variables}}
+
+\begin{verbatim}
+    numLines         bodyCharCt        subExcCt         subQuesCt      
+ Min.   :   2.00   Min.   :     6   Min.   : 0.0000   Min.   : 0.0000  
+ 1st Qu.:  19.00   1st Qu.:   587   1st Qu.: 0.0000   1st Qu.: 0.0000  
+ Median :  32.00   Median :  1088   Median : 0.0000   Median : 0.0000  
+ Mean   :  66.91   Mean   :  2844   Mean   : 0.1313   Mean   : 0.1378  
+ 3rd Qu.:  59.00   3rd Qu.:  2192   3rd Qu.: 0.0000   3rd Qu.: 0.0000  
+ Max.   :6319.00   Max.   :188505   Max.   :42.0000   Max.   :12.0000  
+                                    NA's   :20        NA's   :20       
+     numAtt             numRec           perCaps             hour      
+ Min.   : 0.00000   Min.   :  0.000   Min.   :  0.000   Min.   : 0.00  
+ 1st Qu.: 0.00000   1st Qu.:  1.000   1st Qu.:  4.255   1st Qu.: 8.00  
+ Median : 0.00000   Median :  1.000   Median :  6.055   Median :13.00  
+ Mean   : 0.06579   Mean   :  1.929   Mean   :  8.850   Mean   :12.21  
+ 3rd Qu.: 0.00000   3rd Qu.:  1.000   3rd Qu.:  9.059   3rd Qu.:18.00  
+ Max.   :18.00000   Max.   :311.000   Max.   :100.000   Max.   :23.00  
+                    NA's   :282                                        
+    perHTML          subBlanks        forwards       avgWordLen    
+ Min.   :  0.000   Min.   : 0.00   Min.   : 0.00   Min.   : 1.363  
+ 1st Qu.:  0.000   1st Qu.:10.53   1st Qu.: 0.00   1st Qu.: 4.208  
+ Median :  0.000   Median :13.25   Median : 0.00   Median : 4.455  
+ Mean   :  6.517   Mean   :13.87   Mean   :10.45   Mean   : 4.487  
+ 3rd Qu.:  0.000   3rd Qu.:15.69   3rd Qu.:15.38   3rd Qu.: 4.729  
+ Max.   :100.000   Max.   :86.42   Max.   :99.06   Max.   :26.000  
+                   NA's   :20                                      
+     numDlr        
+ Min.   :   0.000  
+ 1st Qu.:   0.000  
+ Median :   0.000  
+ Mean   :   1.782  
+ 3rd Qu.:   0.000  
+ Max.   :1977.000  
+                   
+\end{verbatim}
+
+Summary shows missing values in subSpamWords(7),noHost(1),isYelling(7)
+from factor variables and in subExcCt(20), subQuesCt(20),
+numRec(282),subBlanks(20) from numeric fields
+
+\hypertarget{missing-values-visualization}{%
+\subsection{Missing Values :
+Visualization}\label{missing-values-visualization}}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{case_study03_files/figure-latex/unnamed-chunk-9-1} 
+
+}
+
+\caption{Left : Not Spam, Right : Spam}\label{fig:unnamed-chunk-9}
+\end{figure}
+
+Interpretation:
+
+\begin{itemize}
+\tightlist
+\item
+  noHost is missing on single record when all other values are present
+\item
+  subSpamWords \& isYelling are missing on same 7 records when all other
+  values are present
+\item
+  subExcCt, subQuesCt, subBlanks appears to be missing on same 20
+  records
+\item
+  It is observed that 13 of 20 rows in subBlanks are NaN.
+\item
+  numRec has missing values on 282 records most likely due to recipients
+  were added in BCC and only 12 emails have been flagged as Spam and
+  remaining 270 are not spam. These 282 missing values are appears to be
+  random and satisfies MAR (Missing at Random). Missing values will be
+  fixed using mean imputation for both categories (Spam and not Spam)
+  seperately.
+\end{itemize}
+
+\hypertarget{missing-values-assumptions-and-actions}{%
+\subsection{Missing Values : Assumptions and
+Actions}\label{missing-values-assumptions-and-actions}}
+
+Instead of deleting records with missing values following actions will
+be taken on the missing data. Imputation will be applied to numRec
+variable.
+
+\begin{table}[H]
+\centering
+\begin{tabular}[t]{llrl>{\raggedright\arraybackslash}p{15em}}
+\toprule
+FeatureName & DataType & Missing & Assumption & Action\\
+\midrule
+noHost & factor & 1 & HostName missing & Replace NAs with F\\
+subSpamWords & factor & 7 & Subject line Missing & Replace NAs with F\\
+isYelling & factor & 7 & Subject Line Missing & Replace NAs with F\\
+subExcCt & numeric & 20 & Subject Line without exclamation mark & Replace NAs with 0s\\
+subQuesCt & numeric & 20 & Subject Line without question mark & Replace NAs with 0s\\
+\addlinespace
+numRec & numeric & 282 & Undisclosed recipients & Apply mean imputation to Spam and Not Spam groups seperately\\
+subBlanks & numeric & 20 & Subject Line Witout Blanks & Replace NAs with 0s\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\hypertarget{no-missing-data-in-final-dataframe}{%
+\subsection{No Missing data in Final
+DataFrame}\label{no-missing-data-in-final-dataframe}}
+
+\begin{figure}[H]
+
+{\centering \includegraphics{case_study03_files/figure-latex/unnamed-chunk-11-1} 
+
+}
+
+\caption{Left : Not Spam, Right : Spam}\label{fig:unnamed-chunk-11}
+\end{figure}
+
+\hypertarget{class-distribution-target-variable}{%
+\subsubsection{Class Distribution (Target
+Variable)}\label{class-distribution-target-variable}}
+
+Below chart shows target variable is binary and class lables are not
+evenly distributed. This is the case of imbalanced dataset.
+
+\begin{figure}[H]
+
+{\centering \includegraphics{case_study03_files/figure-latex/unnamed-chunk-12-1} 
+
+}
+
+\caption{Target Variable}\label{fig:unnamed-chunk-12}
+\end{figure}
+
+\begin{table}[!h]
+
+\caption{\label{tab:unnamed-chunk-13}Target Percentage Distribution}
+\centering
+\begin{tabular}[t]{lrr}
+\toprule
+isSpam & Total & percentage\\
+\midrule
+No Spam & 6951 & 74.35815\\
+Spam & 2397 & 25.64185\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\hypertarget{correlation-plot}{%
+\subsubsection{Correlation Plot}\label{correlation-plot}}
+
+This plot shows numLines and bodyCharCt are strongly correlated at 90\%
+and one of them can be removed. So bodyCharCt will be removed from
+further analysis.
+
+\begin{figure}[H]
+
+{\centering \includegraphics{case_study03_files/figure-latex/unnamed-chunk-14-1} 
+
+}
+
+\caption{Correlogram}\label{fig:unnamed-chunk-14}
+\end{figure}
+
+\hypertarget{strcuture-of-final-dataframe}{%
+\subsection{Strcuture of Final
+DataFrame}\label{strcuture-of-final-dataframe}}
+
+\begin{verbatim}
+## 'data.frame':    9348 obs. of  29 variables:
+##  $ isSpam       : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ isRe         : Factor w/ 2 levels "F","T": 2 1 1 1 2 2 1 2 1 2 ...
+##  $ underscore   : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ priority     : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ isInReplyTo  : Factor w/ 2 levels "F","T": 2 1 1 1 1 2 1 1 1 2 ...
+##  $ sortedRec    : Factor w/ 2 levels "F","T": 2 2 2 2 2 2 2 2 2 2 ...
+##  $ subPunc      : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ multipartText: Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ hasImages    : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ isPGPsigned  : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ subSpamWords : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ noHost       : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ numEnd       : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ isYelling    : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ isOrigMsg    : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ isDear       : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ isWrote      : Factor w/ 2 levels "F","T": 1 1 1 1 1 1 1 2 1 1 ...
+##  $ numLines     : int  50 26 38 32 31 25 38 39 126 50 ...
+##  $ subExcCt     : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ subQuesCt    : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ numAtt       : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ numRec       : num  2 1 1 0 1 1 1 1 1 2 ...
+##  $ perCaps      : num  4.45 7.49 7.44 5.09 6.12 ...
+##  $ hour         : num  11 11 12 13 13 13 13 14 14 11 ...
+##  $ perHTML      : num  0 0 0 0 0 0 0 0 0 0 ...
+##  $ subBlanks    : num  12.5 8 8 18.9 15.2 ...
+##  $ forwards     : num  0 0 0 3.12 6.45 ...
+##  $ avgWordLen   : num  4.38 4.56 4.82 4.71 4.23 ...
+##  $ numDlr       : int  3 0 0 0 0 0 0 0 0 3 ...
+\end{verbatim}
+
+\hypertarget{final-dataframe-for-analysis}{%
+\subsection{Final Dataframe for
+analysis}\label{final-dataframe-for-analysis}}
+
+Structure of DataFrame has not changed. In previous steps only missing
+values have been replaced with 0s or Fs based on assumption made. Here
+is sample DataFrame.
+
+\begin{table}[!b]
+
+\caption{\label{tab:unnamed-chunk-16}DataFrame}
+\centering
+\begin{tabular}[t]{l|l|l|r|r|r|r|r|r|r}
+\hline
+isSpam & isRe & underscore & numLines & subExcCt & subQuesCt & numAtt & numRec & perCaps & hour\\
+\hline
+F & T & F & 50 & 0 & 0 & 0 & 2 & 4.451039 & 11\\
+\hline
+F & F & F & 26 & 0 & 0 & 0 & 1 & 7.491289 & 11\\
+\hline
+F & F & F & 38 & 0 & 0 & 0 & 1 & 7.436096 & 12\\
+\hline
+F & F & F & 32 & 0 & 0 & 0 & 0 & 5.090909 & 13\\
+\hline
+F & T & F & 31 & 0 & 0 & 0 & 1 & 6.116643 & 13\\
+\hline
+F & T & F & 25 & 0 & 0 & 0 & 1 & 7.625272 & 13\\
+\hline
+F & F & F & 38 & 0 & 0 & 0 & 1 & 6.343714 & 13\\
+\hline
+\end{tabular}
+\end{table}
+
+\hypertarget{traintest-split}{%
+\subsection{Train/Test split}\label{traintest-split}}
+
+Original data to be split into train(0.8) and test set (0.2). R package
+caret provides library function createDataPartition to split data into
+train/test set and it performs stratified sampling by default as per its
+documentation. Stratified sampling technique preserves percentage of
+samples of each class. Target variable in this case is binary i.e.~email
+could either be Spam or not Spam and only approximately 25\% emails have
+been labeled as Spam therefore Stratified sampling is the best way to
+proceed.
+
+\hypertarget{train---target-percentage-distribution}{%
+\subsubsection{Train - Target Percentage
+Distribution}\label{train---target-percentage-distribution}}
+
+\textbf{createDataPartition} function from \textbf{caret} packages was
+used to split data into train/test set.Target variable is binary and
+distribution of classes is not balanced. i.e.~70\% observations are not
+spam and only 30\% are labeled as Spam in this dataset. This is case of
+imbalanced dataset. Random Stratified sampling has been used to split
+data into train/test set for building model using decision trees.
+\textbf{Stratified Sampling} preserves the percentage of samples of each
+class. Scaling and normalization is required for decision tree models.
+
+\begin{table}[!h]
+
+\caption{\label{tab:unnamed-chunk-18}Target Percentage Distribution}
+\centering
+\begin{tabular}[t]{lrr}
+\toprule
+isSpam & Total & percentage\\
+\midrule
+No Spam & 5561 & 74.35486\\
+Spam & 1918 & 25.64514\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\hypertarget{constraints}{%
+\subsection{Constraints}\label{constraints}}
+
+Following are limitations of Decision tree algorithms:
+
+\begin{itemize}
+\tightlist
+\item
+  Decision Tree algorithms are greedy algorithms, prone to
+  overfitting.If not handled properly tree tends to grow larger and
+  become complex and difficult to interpret. Overfitting affects
+  generalizability and hence accuracy of prediction goes down
+  significantly.
+\item
+  Trees are unstable, meaning that even small change in information
+  leads to big change in trees.
+\item
+  Loses lot of information in splitting process.
+\item
+  Bad for large datasets
+\end{itemize}
+
+However, there are different ways to tackle these problems.
+Hyperparameter tunining, building stopping criteria are discussed in
+next sections.
+
 \newpage
 
 \hypertarget{modeling-preparations}{%
 \section{Modeling Preparations}\label{modeling-preparations}}
 
+The primary objective of this case study is to detect Spam emails. This
+is binary classification problem. There are bunch of algorithms in the
+machine learning toolkit to solve classification problems. Logistic
+regression, Naive Bayes, kNN, SVM and Decision Trees
+
+\textbf{Hyperparameters}
+
+Here are decision tree hyperparameters
+
+\begin{verbatim}
+                   Type len  Def   Constr Req Tunable Trafo
+minsplit        integer   -   20 1 to Inf   -    TRUE     -
+minbucket       integer   -    - 1 to Inf   -    TRUE     -
+cp              numeric   - 0.01   0 to 1   -    TRUE     -
+maxcompete      integer   -    4 0 to Inf   -    TRUE     -
+maxsurrogate    integer   -    5 0 to Inf   -    TRUE     -
+usesurrogate   discrete   -    2    0,1,2   -    TRUE     -
+surrogatestyle discrete   -    0      0,1   -    TRUE     -
+maxdepth        integer   -   30  1 to 30   -    TRUE     -
+xval            integer   -   10 0 to Inf   -   FALSE     -
+parms           untyped   -    -        -   -    TRUE     -
+\end{verbatim}
+
 \newpage
 
 \hypertarget{model-building-evaluation}{%
 \section{Model Building \& Evaluation}\label{model-building-evaluation}}
+
+Decision tree algorithm are prone to overfit quickly and loses
+generalizability for prediction i.e.~prediction performance become poor.
+Solution to this problem is hyperparameter tuning. Decision trees have
+several hyparameters that can be tuned to get optimal model. Below table
+lists important hyperparameters of which minsplit,minbucket, cp and
+maxdepth will be used here to tune the model. These are the stopping
+criterion for the trees which can be applied at each stage during
+tree-building process.
+
+\begin{table}[H]
+\centering
+\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{30em}}
+\toprule
+HyperParameters & Description\\
+\midrule
+minsplit & Minimum number of observations required to split the given node. If it is set to 20 indicates that if data has less than 20 records then root node becomes leaf
+                   node.\\
+minbucket & Minimum number of observations required at leaf node. default is minbucket = minsplit/3\\
+cp & Complexity Parameter to control size of the tree and also known as cost of adding another variable to decision tree\\
+maxdepth & Set the maximum depth of any node of the final tree\\
+maxsurrogate & Used if data contains missing values. useful to determine which split can be used for missing data\\
+\addlinespace
+usesurrogate & Controls use of surrogate split\\
+surrogatestyle & Controls selection of best surrogate\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{getParamSet(tree)} function from \textbf{R package mlr} returns
+following list of hyper-parameters for the decision tree.
+
+\begin{verbatim}
+                   Type len  Def   Constr Req Tunable Trafo
+minsplit        integer   -   20 1 to Inf   -    TRUE     -
+minbucket       integer   -    - 1 to Inf   -    TRUE     -
+cp              numeric   - 0.01   0 to 1   -    TRUE     -
+maxcompete      integer   -    4 0 to Inf   -    TRUE     -
+maxsurrogate    integer   -    5 0 to Inf   -    TRUE     -
+usesurrogate   discrete   -    2    0,1,2   -    TRUE     -
+surrogatestyle discrete   -    0      0,1   -    TRUE     -
+maxdepth        integer   -   30  1 to 30   -    TRUE     -
+xval            integer   -   10 0 to Inf   -   FALSE     -
+parms           untyped   -    -        -   -    TRUE     -
+\end{verbatim}
+
+\textbf{Tuned Parameters}
+
+Parameters are tuned with following criteria
+
+\begin{itemize}
+\tightlist
+\item
+  5 \textless= minsplit \textless=20
+\item
+  3 \textless= minbucket \textless=10
+\item
+  3 \textless= maxdepth \textless=10
+\item
+  0.01 \textless= cp \textless=0.1
+\item
+  10 fold cross validation
+\item
+  Random search Max iterations 200
+\end{itemize}
+
+Here are tuning results:
+
+\begin{verbatim}
+Tune result:
+Op. pars: minsplit=7; minbucket=9; cp=0.0111; maxdepth=9
+f1.test.mean=0.9416169,tpr.test.mean=0.9536787,ppv.test.mean=0.9299075,tnr.test.mean=0.7904280
+\end{verbatim}
+
+\begin{verbatim}
+Resample Result
+Task: train.data
+Learner: classif.rpart.tuned
+Aggr perf: mmce.test.mean=0.0901186
+Runtime: 1024.82
+\end{verbatim}
 
 \newpage
 
@@ -129,7 +746,21 @@ Explainability}\label{model-interpretability-explainability}}
 \section*{References}\label{references}}
 \addcontentsline{toc}{section}{References}
 
-{[}1{]} Deborah Nolan; Duncan Temple Lang. Data Science in R.Chapman and
-Hall/CRC, 2015.
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Deborah Nolan; Duncan Temple Lang. Data Science in R.Chapman and
+  Hall/CRC, 2015.
+\item
+  \href{https://www.statista.com/statistics/420391/spam-email-traffic-share/}{The
+  statistica report}
+\item
+  \href{https://www.ijser.org/researchpaper/EMAIL-SPAM-FILTERING-USING-DECISION-TREE-ALGORITHM.pdf}{The
+  Paper I} Email spam filtering using decision tree algorithm.
+\item
+  \href{https://ijcat.com/archives/volume5/issue2/ijcatr05021004.pdf}{The
+  Paper II} Identifying Valid Email Spam Emails Using Decision Tree.
+\end{enumerate}
 
 \end{document}

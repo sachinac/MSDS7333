@@ -1,0 +1,9 @@
+base
+kableExtra
+ggplot2
+dplyr
+rpart
+tibble
+bitops
+rattle
+tidyr

@@ -1,0 +1,325 @@
+---
+title: 'MSDS 7333 Spring 2021: Case Study 03 '
+author: "Sachin Chavan,Tazeb Abera,Gautam Kapila,Sandesh Ojha"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  pdf_document:
+    keep_tex: yes
+    extra_dependencies: float
+  word_document: default
+  html_document:
+    df_print: paged
+subtitle: Analysis of Runners’ Performance
+header-includes:
+- \usepackage{multicol}  
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Case Study 03}
+latex_engine: pdflatex
+urlcolor: gray    
+---
+
+# Introduction
+Email spam, also referred to as junk email, is unsolicited messages sent in bulk by email. Spam is legal in the United States. That is, whether your email is solicited or unsolicited, and whether it is highly targeted or not, have nothing to do with legality under U.S. law. This may help for it as silent killer. 
+
+As per much research indicate, spam messages accounted for more than 80 percent of email traffic [1][2][3]. Spam filters were introduced not long after the introduction of email. These filters automatically process incoming messages and apply different statistical techniques to identify and remove unwanted emails. 
+
+Now a days different machine learning algorithm are used for detecting and daily inspecting for incoming emails by different email provider companies like google, yahoo and the like. Among these machine learning algorithms decision tree methods are one of the best list.  
+
+
+
+```{r, setup, include=FALSE, echo=FALSE,message=FALSE,warning=FALSE}
+
+dir <- "C:/Users/tazeb/OneDrive - Southern Methodist University/7th Semester/QTW/CaseStudy/CaseStudy_6/CaseStudy6/"
+setwd(dir)
+knitr::opts_knit$set(root.dir = dir)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r load_libs, include=FALSE, warning=FALSE, echo=FALSE}
+library(magrittr)
+library(reshape2)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(tm)
+library(rpart)
+library(caret)
+library(mlr)
+library(parallelMap)
+library(doParallel)
+library(missForest)
+library(scales)
+library(ggthemes)
+library(GGally)
+library(ltm)
+library(rpart.plot)
+library(knitr)
+
+```
+
+# Business Understanding
+
+The two common approaches used for filtering spam mails are knowledge engineering and machine learning. Emails are classified as either spam or ham using a set of rules in knowledge engineering [4]. Machine learning approach have proved to be more efficient than knowledge engineering approach. No rule is required to be specified, rather a set of training samples which are pre-classified email messages are provided. A particular machine learning algorithm is then used to learn the classification rules from these email messages. 
+
+Machine learning algorithms use statistical models to classify data. In the case of spam detection, a trained machine learning model must be able to determine whether the sequence of words found in an email are closer to those found in spam emails or safe ones.
+
+Several studies have been carried out on machine learning techniques and many of these algorithms are being applied in the field of email spam filtering. Examples of such algorithms include Deep Learning, Naïve Bayes, Decision tree, Support Vector Machines, Neural Networks, K-Nearest Neighbour, Rough sets, and Random Forests.
+
+For this case study we are implementing a a decision tree algorithms. Decision tree learning is the predictive modeling approaches used in statistics, data mining and machine learning. It uses a decision tree to go from observations about an item to conclusions about the item's target value. [Wikipedia]. We explore a decision tree package in R called rpart, which is short for recursive partitioning. 
+
+Our objective is to investigate and optimize key hyperparameters used in the rpart package in order to classify email messages as spam or Ham email. In order to accomplish this, we fit a default decision tree and an optimized decision tree and compare them. 
+
+
+# Data Evaluation and Engineering
+
+There are a total of 9348 unique emails. It contains 29 predictor variables and one response variable named isSpam. Of the 30 total variables, 17 are boolean factor variables and the remaining 13 variables are numeric variables. Each email has been previously classified as spam or valid. We will use these predictor variables and the isSpam response to create two rpart decision tree models. A high-level listing of variable names is given below.
+
+ •	Numeric variables: perCaps, bodyChartCt, numLines, subExcCt, subQuesCt, numAtt, numRec, hour, perHTML, subBlanks, forwards, avgWordLen, numDlr
+ 
+•	Boolean variables: isSpam, isRe, isYelling, underscore, priority, isinReplyTo, sortedRec, subPunc, multipartText, isPGPsigned, subSpamWords, noHost, numEnd, isOrigMsg, isDear, isWrote
+
+
+```{r make, include=FALSE, cache=TRUE, echo=FALSE}
+#get and clean data
+source("src/make.R")
+
+# rename and relevel vars for better interpretation
+emailDFrp$isSpam <- emailDFrp$isSpam %>% 
+                      revalue(c("T"="Spam", "F"="ham")) %>%  relevel("Spam")
+
+# impute missing vals based on forest classification and regression
+# set up parallel method
+
+# this method has been cached but runs each time so we saved output and load below
+
+registerDoParallel(cores=4)
+df <- missForest(emailDFrp, maxiter=5, ntree=200, parallelize = c('forests'), 
+                 variablewise = TRUE)
+
+# establish imputed set
+
+emailDFrp <- df$ximp
+
+load('src/emailDFrp')
+
+```
+
+```{r dataset_bal, include=TRUE, echo=FALSE, fig.height=3, fig.width=8.5}
+# get dataset balance, show via barchart
+
+emailDFrp %>% group_by(isSpam) %>% 
+  dplyr::summarise(Count=n()) %>% 
+  mutate(Pct = Count/sum(Count)) %>% 
+  ggplot(aes(x=isSpam, y=Count, label=comma(Count))) + 
+  geom_bar(stat='identity') +  theme_light() + 
+  ggtitle("Figure ------: Spam vs. Non-Spam Split") + 
+  scale_y_continuous("Count", labels =comma, limits=c(0,7500)) +
+  scale_x_discrete("Response Variable Category") + 
+  geom_text(vjust=-0.5) + theme(text=element_text(size=14))
+
+```
+
+A preliminary evaluation of the dataset found missing observations in 303 unique rows. 
+Rather than discard over three percent of the dataset, we undertake imputation using random forest regression and classification methods for both numeric and categorical predictor variables.
+
+Our dataset is unbalanced, with 2,371 (26%) spam emails, and 6,674 (74%) valid emails. This imbalance in the dataset could introduce higher false negative rates for our analysis task. 
+
+```{r cor_mat, include=TRUE, cache=TRUE, echo=FALSE, fig.height=7, fig.width=8.5}
+
+AsVector <- emailDFrp[, c(2:30)]
+
+nums <- sapply(AsVector, is.numeric)
+bools <- sapply(AsVector, is.factor)
+
+```
+
+
+```{r numeric_impact, include = TRUE, echo=FALSE, cache = TRUE, fig.width=8.5, fig.height=3}
+
+# get boxplots of key numeric predictors, split by outcome status valid or spam
+
+nums <- which(lapply(emailDFrp, is.numeric) ==TRUE) 
+
+# aggregate and plot boxes
+emailDFrp[,c(1, nums)] %>% 
+  gather(Predictor, Value, 2:ncol(emailDFrp[,c(1, nums)])) %>% 
+    filter(Predictor %in% c("forwards", "perCaps", "perHTML", "numLines", 'bodyCharCt')) %>%
+      ggplot(aes(x=isSpam, y=log(1+Value))) + 
+      geom_boxplot(outlier.size=0.25, position="dodge") + 
+      facet_wrap(~Predictor, scales = "free_y", ncol=5) + 
+      theme_light() + 
+      theme(legend.position = "bottom", 
+            legend.text=element_text(size=8),
+            legend.title = element_text(size=10),
+            axis.text.x = element_text(angle=90, vjust=0.5),
+            text=element_text(size=14))+
+      ggtitle("Figure -----: Continous Predictor Variables and Spam Outcomes") + 
+      scale_x_discrete("Spam or Valid Email")+
+      ylab("Log Value")
+```
+
+# Modeling Preparations
+
+
+
+
+# Model Building & Evaluation
+
+```{r fit_dtree_base, echo=FALSE, include=TRUE, fig.height=5, fig.width=8.5}
+# we fit the base rpart model in this block
+
+set.seed(4)
+
+# get counts to prep for train/test split
+spam <- emailDFrp$isSpam == "Spam"
+numSpam <- sum(spam)
+numHam <- sum(!spam)
+
+# 80/20 split, stratified
+testSpamIdx <- sample(numSpam, size = floor(numSpam/5))
+testHamIdx <- sample(numHam, size = floor(numHam/5))
+
+
+# pull together stratified train and test sets with training 80 pct
+testDF <- 
+  rbind( emailDFrp[emailDFrp$isSpam == "Spam", ][testSpamIdx, ],
+         emailDFrp[emailDFrp$isSpam == "Valid", ][testHamIdx, ])
+
+trainDF <-
+  rbind( emailDFrp[emailDFrp$isSpam == "Spam", ][-testSpamIdx, ], 
+         emailDFrp[emailDFrp$isSpam == "Valid", ][-testHamIdx, ])
+
+
+# initiate mlr classification task
+# set up a learning task placeholder
+spam.tsk = makeClassifTask(id = "spam", 
+                           data = trainDF, 
+                           target = "isSpam")
+
+# Create the learner from embedded libraries
+spam.lrn = makeLearner( cl = "classif.rpart",# use rpart algorithm, gini index is default for splitting
+                        id ="spam", # give it an id
+                        fix.factors.prediction = TRUE, # control for missing class if any)
+                        predict.type = 'prob') # to get probabilities
+
+# focus on maxdepth, cp and minsplit
+# show defaults - cp = 0.01, minsplit=20, maxdepth=30
+#getParamSet(spam.lrn) 
+
+# fit with defaults, cp = 0.01
+spam.clf <- mlr::train(spam.lrn, spam.tsk)
+splits <- getLearnerModel(spam.clf)
+
+# check out CP, default gini index
+#summary(splits)
+
+# which variables are most important?
+dat <- data.frame(vars=names(splits$variable.importance), 
+                  importance=splits$variable.importance)
+
+
+# plot the feature importances
+ggplot(dat, aes(reorder(vars, importance, sum), importance))+
+    coord_flip()+
+    geom_col()+
+    theme(legend.position = "bottom", 
+            legend.text=element_text(size=8),
+        legend.title = element_text(size=10),
+        axis.text.x = element_text(angle=90, vjust=0.5),
+        text=element_text(size=14))+
+    ggtitle("Figure -------: rpart Feature Importance")+
+    xlab("Feature Splits")+
+    ylab("Importance Value")
+```
+
+```{r perCaps_class, include=TRUE, echo=FALSE, fig.height=5, fig.width=8.5}
+
+# for viz purposes, log top 2 importance, fit and predict
+trainDF$perCaps <- log(1+trainDF$perCaps)
+trainDF$bodyCharCt <- log(1+trainDF$bodyCharCt)
+
+# obviously a lot of error when just using the top two predictors
+# needs more to be accurate!
+spam.log.tsk = makeClassifTask(id = "spam", 
+                               data = trainDF, 
+                               target = "isSpam")
+
+# plot decision regions based on top two importance vars
+g <- plotLearnerPrediction(learner = spam.lrn, 
+                           task = spam.log.tsk, 
+                           features=c("perCaps", "bodyCharCt"),
+                           pointsize = 0.5, 
+                           err.col="white",
+                           bg.cols = c("darkblue","green"),
+                           err.size = 0.5,
+                           err.mark="cv")
+
+# customize for clarity
+g+
+  ggtitle('Figure --------: Body Character Count and Percent Capitals Decision Tree')+
+  theme(legend.key.size = unit(1, "cm"),
+        legend.position = "right", 
+        legend.text=element_text(size=8),
+        legend.title = element_text(size=10),
+        axis.text.x = element_text(angle=90, vjust=0.5),
+        text=element_text(size=14))+     
+  guides(shape = guide_legend(override.aes = list(size = 3)))
+```
+
+
+
+
+
+# Model Interpretability & Explainability
+
+```{r tree_plot, include=TRUE, echo=FALSE, fig.width=8.5, fig.height=4}
+# print a pretty tree plot of our base rpart model
+prp(splits, 0, extra=1)
+```
+
+```{r confusion_base, echo=FALSE, include=TRUE}
+
+# get confusion matrix for predictions on test
+spam.preds <- predict(spam.clf, newdata =  testDF)
+
+# get scores
+preds <- as.data.frame(spam.preds$data)
+
+# confusion matrix for default rpart
+calculateConfusionMatrix(spam.preds)
+
+#calculateConfusionMatrix(spam.pred, relative = TRUE)
+performance(spam.preds, measures=list(auc, mmce, fpr, fnr))
+
+```
+
+
+
+
+
+
+
+
+
+# Conclusions
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Reference:
+1.	https://www.statista.com/statistics/420391/spam-email-traffic-share/
+2.	https://www.ijser.org/researchpaper/EMAIL-SPAM-FILTERING-USING-DECISION-TREE-ALGORITHM.pdf 
+3. https://ijcat.com/archives/volume5/issue2/ijcatr05021004.pdf
+4. https://www.sciencedirect.com/science/article/pii/S2405844018353404#
