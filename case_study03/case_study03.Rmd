@@ -407,7 +407,7 @@ cvTuning <- "data/cvWithTuning.dat"
 if (file.exists(cvTuning)) {
   load(file=cvTuning)
 } else {
-  outer <- makeResampleDesc("CV", iters = 2)
+  outer <- makeResampleDesc("CV", iters = 10)
   
   treeParamSpace <- makeParamSet(
                     makeIntegerParam("minsplit", lower = 5, upper = 20),
@@ -416,7 +416,7 @@ if (file.exists(cvTuning)) {
                     makeIntegerParam("maxdepth", lower = 3, upper = 10))
 # Defining the random search
   randSearch  <- makeTuneControlRandom(maxit = 200)
-  cvForTuning <- makeResampleDesc("CV", iters = 2)
+  cvForTuning <- makeResampleDesc("CV", iters = 10)
 
   treeWrapper <- makeTuneWrapper("classif.rpart", resampling = cvForTuning,
                                   measures = list(f1,tpr,ppv,tnr),
@@ -426,8 +426,8 @@ if (file.exists(cvTuning)) {
 
   save(cvWithTuning, file=cvTuning)
 }
-
-
+gg <- getNestedTuneResultsOptPathDf(cvWithTuning)
+#getNestedTuneResultsX(cvWithTuning)
 ```
 
 ```{r}
@@ -473,4 +473,5 @@ print(getTuneResult(mod))
 r = resample(lrn, task, outer, extract = getTuneResult)
 getNestedTuneResultsOptPathDf(r)
 ```
+ 
  
