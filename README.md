@@ -37,3 +37,14 @@ Techology : R, Latex
 
 Reference : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hall/CRC, 2015
 
+
+Python begins
+
+**4) Case Study 04** 
+
+This case study is building ARIMA model using python. Use historical flu data and provide four week farcast. 
+
+Techology : Python, Latex
+
+Reference : Online
+
