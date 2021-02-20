@@ -99,7 +99,7 @@
 \makeatother
 \subtitle{Email Spam Detection}
 \author{Sachin Chavan,Tazeb Abera,Gautam Kapila,Sandesh Ojha}
-\date{2021 February 18}
+\date{2021 February 19}
 
 \begin{document}
 \maketitle
@@ -108,12 +108,14 @@
 \section{Introduction}\label{introduction}}
 
 \textbf{E}mail spams are unsolicited emails that also referred as Junk
-email sent in bulk. There is no law at least in United States that
+emails sent in bulk. There is no law at least in United States that
 prevents anybody from sending unsolicited emails whether in single email
 or in bulk. Research indicate that email spams are accounted for over
-80\% of total email traffic.\(^{[2][3][4]}\). There are different forms
-of email spams or unsolicited emails that may affect either individuals
-or organizations. Following are the few of them :
+80\% of total email traffic.\(^{[2][3][4]}\). First commercial spam
+incident was reported in 1994 \(^{[5]}\). That email message was sent to
+393 recipients advertising new model of VMS-DEC computer. There are
+different forms of email spams or unsolicited emails that may affect
+either individuals or organizations. Following are the few of them :
 
 \begin{itemize}
 \tightlist
@@ -129,6 +131,12 @@ or organizations. Following are the few of them :
   Money Scams
 \item
   Virus/Malware
+\item
+  Fills inbox
+\item
+  Potentially steals private information
+\item
+  Privacy concerns.
 \end{itemize}
 
 All these can adversely affect individual as well as organizations. Such
@@ -136,8 +144,13 @@ emails comes from unknown sources that we never interacted with or
 sometimes spammers use spoofing techniques to mislead recipients to
 appear as valid source. Organizations also takes advantage to send bulk
 emails to potential customers to advertise their products.Such bulk
-emails occupies network traffic all the time. Human can easily
-categorize suche mails and trash them manaually
+emails occupies network traffic all the time. As far as personal email
+box goes human can easily categorize such emails and trash them
+manually. But nowadays there so many spams that it becomes hard to
+maintain email box without junk. That's where automated spam filters
+turns out to be very useful. Such a spam filters automatically detects
+spams and moves them to separate folder.Google for example and many
+other mailbox providers do run their own spam filters.
 
 Now a days different machine learning algorithm are used for detecting
 and daily inspecting for incoming emails by different email provider
@@ -169,12 +182,16 @@ filtering. Examples of such algorithms include Deep Learning, Naïve
 Bayes, Decision tree, Support Vector Machines, Neural Networks,
 K-Nearest Neighbor, Rough sets, and Random Forests.
 
-For this case study we are implementing a a decision tree algorithms.
-Decision tree learning is the predictive modeling approaches used in
-statistics, data mining and machine learning. It uses a decision tree to
-go from observations about an item to conclusions about the item's
-target value. {[}Wikipedia{]}. We explore a decision tree package in R
-called rpart, which is short for recursive partitioning.
+For this case study we are implementing a decision tree algorithm.
+Decision trees provides some unique advantages over other ML algorithms
+like Naive Bayes, SVM, kNN etc. Some of the aspect are expored as a part
+of current work. The approach uses a decision tree to go from
+observations associated with the email to target classification of being
+spam or not a spam. We explore a decision tree package in R called
+rpart, which is short for recursive partitioning.
+
+\hypertarget{objective}{%
+\subsection{Objective}\label{objective}}
 
 Our objective is to investigate and optimize key hyperparameters used in
 the rpart package in order to classify email messages as spam or Ham
@@ -620,28 +637,124 @@ next sections.
 \hypertarget{modeling-preparations}{%
 \section{Modeling Preparations}\label{modeling-preparations}}
 
-The primary objective of this case study is to detect Spam emails. This
-is binary classification problem. There are bunch of algorithms in the
-machine learning toolkit to solve classification problems. Logistic
-regression, Naive Bayes, kNN, SVM and Decision Trees
+\hypertarget{approaches}{%
+\subsection{Approaches:}\label{approaches}}
 
-\textbf{Hyperparameters}
+Two approaches were under consideration for email SPAM classification
+problem, (1) Naïve Bayes, and (2) decision tree (DT) based approach.
+These are discussed below and a case is made for use of decision tree
+for modeling problem. Naïve Bayes (NB) requires or assumes an underlying
+probabilistic model. This is not a requirement for decision tree. In
+contrast to NB approach, decision tree algorithms are relatively easier
+to understand in terms of understanding classification algorithm, and
+also provides easy identification of important features, and handling of
+missing values. In DT based approach it is easier to accommodate
+additional derived features from an email (e.g.~number of forwards,
+number of capital letters in subject line, etc.), and not just the word
+content. To explore and capture above, DT based approach is pursued in
+this work.
 
-Here are decision tree hyperparameters
+\hypertarget{classification-metrics}{%
+\subsection{Classification Metrics:}\label{classification-metrics}}
 
-\begin{verbatim}
-                   Type len  Def   Constr Req Tunable Trafo
-minsplit        integer   -   20 1 to Inf   -    TRUE     -
-minbucket       integer   -    - 1 to Inf   -    TRUE     -
-cp              numeric   - 0.01   0 to 1   -    TRUE     -
-maxcompete      integer   -    4 0 to Inf   -    TRUE     -
-maxsurrogate    integer   -    5 0 to Inf   -    TRUE     -
-usesurrogate   discrete   -    2    0,1,2   -    TRUE     -
-surrogatestyle discrete   -    0      0,1   -    TRUE     -
-maxdepth        integer   -   30  1 to 30   -    TRUE     -
-xval            integer   -   10 0 to Inf   -   FALSE     -
-parms           untyped   -    -        -   -    TRUE     -
-\end{verbatim}
+For the binary classification problem at hand, with goal of predicting
+if Email is SPAM or NOT, we have following confusion matrix
+interpretation:
+
+While accuracy is a default metric for better classification, for
+current problem we need to discuss importance of FP (False Positive) and
+FN (False Negative) scenarios to identify metrics:
+
+\textbf{False Positive (FP) rate needs to be minimized.}
+
+\begin{itemize}
+\tightlist
+\item
+  It is the number of times Email is classified as SPAM, while actually
+  it was not.
+\item
+  Goal is that the SPAM filter should not automatically block emails by
+  classifying them as SPAM, when they actually are not. Otherwise, users
+  could end up loosing a lot of important emails.
+\item
+  This implies that specificity given by \(\frac{TN}{TN+FP}\) =
+  \textasciitilde1, or as high as possible.
+\end{itemize}
+
+\textbf{False Negative (FN) rate should be minimized, but is less
+critical than FP rate.}
+
+\begin{itemize}
+\tightlist
+\item
+  This is the number of times Email is classified as Ham, while actually
+  it was SPAM.
+\item
+  FN rate is less critical than FP rate, as we can occasionally allow
+  SPAM messages to reach end user, as long as we get better model,
+  i.e.~a very low FP rate.
+\item
+  It is assumed that that the end person can exercise judgement and
+  categorize such emails as SPAM, and take corrective actions as per
+  company's IT policy.
+\end{itemize}
+
+Above arguments lead us to select following metrics to be considered
+while choosing the best model:
+
+\begin{itemize}
+\item
+  Specificity, or True Negative Rate (TNR)
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Given \(TNR=\frac{TN}{TN+FP}\)
+  \item
+    Minimizing FP, implies we need to select model with highest TNR
+    values
+  \end{itemize}
+\item
+  Precision, or Positive Predictive Value (PPV)
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Given \(PPV=\frac{TP}{TP+FP}\)
+  \item
+    Minimizing FP, implies we need to select model with highest PPV
+    values
+  \end{itemize}
+\end{itemize}
+
+There is additional flexibility in choosing model with a slightly poorer
+recall, or sensitivity \(\frac{TP}{TP+FN}\) as cost of FP is larger than
+FN, and focus is minimizing FP over FN.
+
+Lastly, we have an imbalanced classification problem at hand. Refer
+Figure above, that shows that \textasciitilde75\% outcomes are HAM,
+while \textasciitilde25\% outcomes are SPAM in modeling dataset. Due to
+above, and to provide a better balance between precision and recall, F1
+metric is additionally chosen as a metric for choosing the best model.
+F1 is harmonic mean of `Precision' and `Recall' and given by
+
+\(\frac{2*Precision*Recall}{Precision+Recall}\)
+
+F1 score penalizes if any one of precision or recall falls low, which
+may also happen due to imbalanced classification problem at hand when
+attempting k-fold cross validation. Basic Tree Model \& Parameters
+
+Parameters tuned for our basic tree are mentioned below along with
+description: minsplit - the minimum number of observations that must
+exist in a node in order for a split to be attempted minbucket - the
+minimum number of observations in any terminal node cp - complexity
+parameter. Any split that does not decrease the overall lack of ﬁt by a
+factor of cp is not attempted. A high cp value implies a split is
+attempted only if information gain is larger by amount cp.~Choosing a
+higher value of cp reduces number of tree splits, as fewer splits will
+meet the high bar on information gain as set by high cp parameter.
+
+In our analysis above parameters are varied.
 
 \newpage
 
@@ -717,17 +830,157 @@ Here are tuning results:
 
 \begin{verbatim}
 Tune result:
-Op. pars: minsplit=7; minbucket=9; cp=0.0111; maxdepth=9
-f1.test.mean=0.9416169,tpr.test.mean=0.9536787,ppv.test.mean=0.9299075,tnr.test.mean=0.7904280
+Op. pars: minsplit=8; minbucket=3; cp=0.0125; maxdepth=9
+f1.test.mean=0.9379524,tpr.test.mean=0.9496755,ppv.test.mean=0.9266441,tnr.test.mean=0.7823693
 \end{verbatim}
 
+\textbf{Impact of hyper parameter tuning on model's performance}
+
+Model performance metric variation as a function of tuning parameters is
+analyzed through plots below.
+
+\emph{Impact due to Complexity Parameter (cp)}
+
+Complexity parameter controls the tree growth, and additional splits at
+a level are attempted only if information gain is larger by amount cp.~
+
+\begin{itemize}
+\tightlist
+\item
+  Higher cp value puts a larger requirement on information gain with
+  every split, leading to smaller trees.
+\item
+  Smaller cp values lower thre requirement on information gain with
+  every split, leading to larger trees.
+\end{itemize}
+
+As can be seen from figure below:
+
+\begin{itemize}
+\tightlist
+\item
+  Smaller cp values, lead to better or improved metric (F1 score)
+\item
+  For maxdepth upto 4, reducing cp does not improve the metric, which is
+  intuitive, as tree stops to grow. However increasing maxdepth
+  \textgreater{} 4 allows better metric.
+\end{itemize}
+
+Clearly maxdepth and cp directly help control and influence the
+classification model metrics.
+
+\begin{center}\includegraphics{case_study03_files/figure-latex/unnamed-chunk-23-1} \end{center}
+
+\emph{Impact due to Minsplit and Minbucket}
+
+Minsplit is the minimum number of observations that must exist in a node
+in order for a split to be attempted.
+
+\begin{itemize}
+\tightlist
+\item
+  Smaller value is expected to lead to tree growth.
+\end{itemize}
+
+Minbucket is the minimum number of observations in any terminal node
+
+\begin{itemize}
+\tightlist
+\item
+  Smaller value is expected to lead to tree growdth
+\end{itemize}
+
+However, Minsplit and Minbucket oppose each other sometimes, and may
+render other value redundant. E.g. minsplit has to be larger than
+minbucket for both of the parameters to operate independently.
+
+Looking at impact of Minsplit and Minbucket on F1 metric, refer figure
+below, does not indicate that they play a major role in determining
+model score like F1. It is clear that cp value is what drives the model
+performance.
+
+\begin{center}\includegraphics{case_study03_files/figure-latex/unnamed-chunk-24-1} \end{center}
+
+\begin{center}\includegraphics{case_study03_files/figure-latex/unnamed-chunk-25-1} \end{center}
+
+\textbf{Model Performance of Tuned Model}
+
+Tuned decision tree has following hyperparamter values:
+
+\begin{itemize}
+\tightlist
+\item
+  minsplit = 8
+\item
+  minbucket = 3
+\item
+  cp = 0.0125
+\item
+  maxdepth = 9
+\end{itemize}
+
+Below model performance summary captures all metrics associated with
+classification task.
+
 \begin{verbatim}
-Resample Result
-Task: train.data
-Learner: classif.rpart.tuned
-Aggr perf: mmce.test.mean=0.0901186
-Runtime: 1024.82
+Confusion Matrix and Statistics
+
+        
+predTest    T    F
+       T  353   69
+       F  126 1321
+                                          
+               Accuracy : 0.8957          
+                 95% CI : (0.8809, 0.9092)
+    No Information Rate : 0.7437          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.7152          
+                                          
+ Mcnemar's Test P-Value : 6.066e-05       
+                                          
+            Sensitivity : 0.7370          
+            Specificity : 0.9504          
+         Pos Pred Value : 0.8365          
+         Neg Pred Value : 0.9129          
+              Precision : 0.8365          
+                 Recall : 0.7370          
+                     F1 : 0.7836          
+             Prevalence : 0.2563          
+         Detection Rate : 0.1889          
+   Detection Prevalence : 0.2258          
+      Balanced Accuracy : 0.8437          
+                                          
+       'Positive' Class : T               
+                                          
 \end{verbatim}
+
+\emph{Metrics used to evaluate the model are:}
+
+\begin{itemize}
+\tightlist
+\item
+  Precision : 0.8365
+\item
+  Specificity : 0.9504
+\item
+  F1 score : 0.7836
+\item
+  Recall : 0.7370
+\item
+  Accuracy : 0.8957
+\end{itemize}
+
+\emph{Observations}
+
+\begin{itemize}
+\tightlist
+\item
+  Model has good Specificity and Precision, indicative of smaller False
+  Positive which is desired.
+\item
+  The F1 score shows a good balance between precision and recall.
+\end{itemize}
 
 \newpage
 
@@ -735,10 +988,160 @@ Runtime: 1024.82
 \section{Model Interpretability \&
 Explainability}\label{model-interpretability-explainability}}
 
+Most important features from the model that was built after 10 fold
+cross validation and hyperparameter tuning is as shown below. While
+building model using decision trees assigns scores to these variables.
+Feature scores gives us clear picture which features tree found most
+important. So for this particular model we can clearly see feature
+perCaps (percentatge uppercase letters ) is the most important feature
+followed by numLines (number of lines per message),perHTML(percentage
+HTML tags),numDlr (Number of dollar symbol). As per this model perCaps
+is the most deciding factor to know if email is spam or not then number
+of lines and percentage of HTML tags.
+
+\begin{figure}[H]
+\includegraphics{case_study03_files/figure-latex/unnamed-chunk-28-1} \caption{Feature importance}\label{fig:unnamed-chunk-28}
+\end{figure}
+
+The most importatn feature is perCaps (Percentage capital letters in the
+body of the message) and least important feature is isPGPsigned
+(Signature). perCaps contributes more than any other features. Almost
+600 emails have been flagged as a Spam while numLines contributes little
+less than 400 towards Spams out of total emails. This is quite what we
+see on daily basis all such Spams contains capital letters. This bar
+plot is quite intuative and self explanatory.
+
+\begin{figure}[H]
+\includegraphics{case_study03_files/figure-latex/unnamed-chunk-29-1} \caption{Decision Tree}\label{fig:unnamed-chunk-29}
+\end{figure}
+
+Interpreting trees is quite straightforward. One just need to answer
+series of questions to go to bottom of the tree to classify message as
+Spam or not Spam.
+
+\textbf{Example 1}
+
+Here is one example randomly picked up from the dataset and let's
+walkthrough the tree from top to bottom of the tree by answering
+questions.
+
+\begin{verbatim}
+  isSpam  perCaps numLines  perHTML numDlr forwards isInReplyTo isRe
+1      T 38.47865      101 42.38749      0 1.980198           F    F
+\end{verbatim}
+
+Q1 - Is perCaps \textgreater{} 13
+
+A1 - Yes PerCaps = 38.47 \textgreater{} 13 move to right branch
+
+Q2 - is numLines \textgreater{} 9.5
+
+A2 - Indeed numLines = 101 \textgreater9.5 move to right branch
+
+Q3 - is isInReplyTo T or F
+
+A3 - its False go to the right branch and this is leaf node.
+
+By answering just three questions we concluded that email is Spam email.
+This is real advantage of decision trees. They superbly interpretable
+compared to other models.
+
+\textbf{Example 2}
+
+Here is another example for email that is not a spam.
+
+\begin{verbatim}
+  isSpam  perCaps numLines perHTML numDlr forwards isInReplyTo isRe
+1      F 4.451039       50       0      3        0           T    T
+\end{verbatim}
+
+Q1 - Is perCaps \textless{} 13
+
+A1 - Yes perCaps= 4.45 \textless{} 13 move towards left Subtree
+
+Q2 - Is perHTML \textless{} 3.9
+
+A2 - Yes perHTML=0 \textless{} 3.9 move towards left Subtree
+
+Q3 - Is forwards \textgreater{} 1.2
+
+A3 - No forwards=0 \textless{} 1.2 move towards right Subtree
+
+Q4 - Is isInReplyTo = T ?
+
+A4 - isInReplyTo = T move towards left subtree and this is leaf node
+which tells us that this email is not a Spam.
+
+Again by answering just four questions we concluded that email is not a
+Spam.
+
 \newpage
 
 \hypertarget{conclusion}{%
 \section{Conclusion}\label{conclusion}}
+
+An Email SPAM filtering model is developed that is capable of accurately
+identifying SPAM 90\% of time, and with a true negative rate, or
+specificity at 95\%. This implies very few times a non-SPAM email gets
+classified as SPAM.
+
+A decision tree based classification approach is developed that can be
+deployed alongside automatic reading of email and doing a real time
+check to categorize email as a SPAM or not SPAM.
+
+The model used following variables for classification of email in SPAM:
+
+\begin{itemize}
+\tightlist
+\item
+  forwards
+\item
+  perCaps
+\item
+  perHTML
+\item
+  numLines
+\item
+  numDlr
+\item
+  subBlanks
+\item
+  isInReplyTo
+\end{itemize}
+
+An email is classifies as SPAM when any of following rule is met:
+
+\begin{itemize}
+\tightlist
+\item
+  perCaps \textgreater= 13 , and numLines \textgreater{} 9.5, and,
+  isInReplyTo is false
+\item
+  perCaps \textless{} 13 , and perHTML \textgreater{} 3.9, and numLines
+  \textgreater{} 242
+\item
+  perCaps \textless{} 13 , and perHTML \textless{} 3.9, and \#forwards
+  \textless{} 1.2., and numDlr \textgreater= 0.5, isInReplyTo is false,
+  and, numLines \textless{} 103
+\item
+  perCaps \textless{} 13 , and perHTML \textless{} 3.9, and \#forwards
+  \textless{} 1.2., and numDlr \textless{} 0.5 , isInReplyTo is true,
+  and, subBlanks \textgreater=25
+\item
+  perCaps \textless{} 13 , and perHTML \textless{} 3.9, and \#forwards
+  \textless{} 1.2., and numDlr \textless{} 0.5 , isInReplyTo is true,
+  and, subBlanks \textless{} 25, and subExcCt \textgreater=0.5 and
+  numLines \textgreater{} 17
+\item
+  perCaps \textless{} 13 , and perHTML \textless{} 3.9, and \#forwards
+  \textless{} 1.2., and numDlr \textless{} 0.5 , isInReplyTo is true,
+  and, subBlanks \textless{} 25, and subExcCt \textless{} 0.5 and isDear
+  = 2
+\end{itemize}
+
+Decision trees are super interpretable compared to other
+models/algorithms, For future work Naive Bayes, SVM, Stockastic models
+could also be explored and benchmarked for model performance.
 
 \newpage
 
@@ -761,6 +1164,9 @@ Explainability}\label{model-interpretability-explainability}}
 \item
   \href{https://ijcat.com/archives/volume5/issue2/ijcatr05021004.pdf}{The
   Paper II} Identifying Valid Email Spam Emails Using Decision Tree.
+\item
+  \href{https://www.connections.com/blog/the-negative-effects-of-spam}{Connection
+  for Businesss website}
 \end{enumerate}
 
 \end{document}

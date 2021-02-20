@@ -66,7 +66,7 @@ load('data/data.Rda')
 
 # Introduction
 
-**E**mail spams are unsolicited emails that also referred as Junk email sent in bulk. There is no law at least in United States that prevents anybody from sending unsolicited emails whether in single email or in bulk. Research indicate that email spams are accounted for over 80% of total email traffic.$^{[2][3][4]}$. There are different forms of email spams or unsolicited emails that may affect either individuals or organizations. Following are the few of them :
+**E**mail spams are unsolicited emails that also referred as Junk emails sent in bulk. There is no law at least in United States that prevents anybody from sending unsolicited emails whether in single email or in bulk. Research indicate that email spams are accounted for over 80% of total email traffic.$^{[2][3][4]}$. First commercial spam incident was reported in 1994 $^{[5]}$. That email message was sent to 393 recipients advertising new model of VMS-DEC computer. There are different forms of email spams or unsolicited emails that may affect either individuals or organizations. Following are the few of them :
 
 * Commercial Advertisements
 * Hoax emails
@@ -74,13 +74,18 @@ load('data/data.Rda')
 * Lottery winining notification is very common
 * Money Scams
 * Virus/Malware
+* Fills inbox
+* Potentially steals private information
+* Privacy concerns.
 
-All these can adversely affect individual as well as organizations. Such emails comes from unknown sources that we never interacted with or sometimes spammers use spoofing techniques to mislead recipients to appear as valid source. Organizations also takes advantage to send bulk emails to potential customers to advertise their products.Such bulk emails occupies network traffic all the time. Human can easily categorize suche mails and trash them manaually 
+All these can adversely affect individual as well as organizations. Such emails comes from unknown sources that we never interacted with or sometimes spammers use spoofing techniques to mislead recipients to appear as valid source. Organizations also takes advantage to send bulk emails to potential customers to advertise their products.Such bulk emails occupies network traffic all the time. As far as personal email box goes human can easily categorize such emails and trash them manually. But nowadays there so many spams that it becomes hard to maintain email box without junk. That's where automated spam filters turns out to be very useful. Such a spam filters automatically detects spams and moves them to separate folder.Google for example and many other mailbox providers do run their own spam filters.
 
 Now a days different machine learning algorithm are used for detecting and daily inspecting for incoming emails by different email provider companies like google, yahoo and the like. Among these machine learning algorithms decision tree methods are one of the best list.  
 
 \newpage
+
 # Business Understanding
+
 
 The two common approaches used for filtering spam mails are knowledge engineering and machine learning. Emails are classified as either spam or ham using a set of rules in knowledge engineering $^{[4]}$. Machine learning approach have proved to be more efficient than knowledge engineering approach. No rule is required to be specified, rather a set of training samples which are pre-classified email messages are provided. A particular machine learning algorithm is then used to learn the classification rules from these email messages. 
 
@@ -88,9 +93,13 @@ Machine learning algorithms use statistical models to classify data. In the case
 
 Several studies have been carried out on machine learning techniques and many of these algorithms are being applied in the field of email spam filtering. Examples of such algorithms include Deep Learning, Naïve Bayes, Decision tree, Support Vector Machines, Neural Networks, K-Nearest Neighbor, Rough sets, and Random Forests.
 
-For this case study we are implementing a a decision tree algorithms. Decision tree learning is the predictive modeling approaches used in statistics, data mining and machine learning. It uses a decision tree to go from observations about an item to conclusions about the item's target value. [Wikipedia]. We explore a decision tree package in R called rpart, which is short for recursive partitioning. 
+For this case study we are implementing a decision tree algorithm. Decision trees provides some unique advantages over other ML algorithms like Naive Bayes, SVM, kNN etc. Some of the aspect are expored as a part of current work. The approach uses a decision tree to go from observations associated with the email to target classification of being spam or not a spam. We explore a decision tree package in R called rpart, which is short for recursive partitioning. 
+
+
+## Objective
 
 Our objective is to investigate and optimize key hyperparameters used in the rpart package in order to classify email messages as spam or Ham email. In order to accomplish this, we fit a default decision tree and an optimized decision tree and compare them. 
+
 
 \newpage
 
@@ -315,17 +324,60 @@ However, there are different ways to tackle these problems. Hyperparameter tunin
 
 # Modeling Preparations
 
-The primary objective of this case study is to detect Spam emails. This is binary classification problem. There are bunch of algorithms in the machine learning toolkit to solve classification problems. Logistic regression, Naive Bayes, kNN, SVM and Decision Trees
+## Approaches:  
 
-**Hyperparameters**
+Two approaches were under consideration for email SPAM classification problem, (1) Naïve Bayes, and (2) decision tree (DT) based approach. These are discussed below and a case is made for use of decision tree for modeling problem. Naïve Bayes (NB) requires or assumes an underlying probabilistic model. This is not a requirement for decision tree. In contrast to NB approach, decision tree algorithms are relatively easier to understand in terms of understanding classification algorithm, and also provides easy identification of important features, and handling of missing values. In DT based approach it is easier to accommodate additional derived features from an email (e.g. number of forwards, number of capital letters in subject line, etc.), and not just the word content. To explore and capture above, DT based approach is pursued in this work.
 
-Here are decision tree hyperparameters
+## Classification Metrics: 
+For the binary classification problem at hand, with goal of predicting if Email is SPAM or NOT, we have following confusion matrix interpretation:
 
-```{r, comment=NA,include=TRUE, echo=FALSE, messages=FALSE,cache=TRUE,out.align='left',fig.pos="top",results='markup'}
-treeTask <- makeClassifTask(data = train.data, target = "isSpam")
-tree <- makeLearner("classif.rpart")
-getParamSet(tree)
-```
+
+
+While accuracy is a default metric for better classification, for current problem we need to discuss importance of FP (False Positive) and FN (False Negative) scenarios to identify metrics:
+
+**False Positive (FP) rate needs to be minimized.** 
+
+* It is the number of times Email is classified as SPAM, while actually it was not. 
+* Goal is that the SPAM filter should not automatically block emails by classifying them as SPAM, when they actually are not. Otherwise, users could end up loosing a lot of important emails. 
+* This implies that specificity given by $\frac{TN}{TN+FP}$ = ~1, or as high as possible.
+
+**False Negative (FN) rate should be minimized, but is less critical than FP rate.**
+
+*	This is the number of times Email is classified as Ham, while actually it was SPAM.
+* FN rate is less critical than FP rate, as we can occasionally allow SPAM messages to reach end user, as long as we get better model, i.e. a very low FP rate. 
+* It is assumed that that the end person can exercise judgement and categorize such emails as SPAM, and take corrective actions as per company’s IT policy.
+
+
+Above arguments lead us to select following metrics to be considered while choosing the best model:
+
+* Specificity, or True Negative Rate (TNR)
+
+  * Given $TNR=\frac{TN}{TN+FP}$
+  * Minimizing FP, implies we need to select model with highest TNR values
+
+* Precision, or Positive Predictive Value (PPV)  
+
+  * Given $PPV=\frac{TP}{TP+FP}$ 
+  * Minimizing FP, implies we need to select model with highest PPV values
+  
+There is additional flexibility in choosing model with a slightly poorer recall, or sensitivity $\frac{TP}{TP+FN}$ as cost of FP is larger than FN, and focus is minimizing FP over FN.
+
+Lastly, we have an imbalanced classification problem at hand. Refer Figure <XYZ> above, that shows that ~75% outcomes are HAM, while ~25% outcomes are SPAM in modeling dataset. Due to above, and to provide a better balance between precision and recall, F1 metric is additionally chosen as a metric for choosing the best model. F1 is harmonic mean of ‘Precision’ and ‘Recall’ and given by
+
+
+$\frac{2*Precision*Recall}{Precision+Recall}$
+                                                          
+F1 score penalizes if any one of precision or recall falls low, which may also happen due to imbalanced classification problem at hand when attempting k-fold cross validation.
+Basic Tree Model & Parameters
+
+Parameters tuned for our basic tree are mentioned below along with description:
+minsplit	- the minimum number of observations that must exist in a node in order for a split to be attempted
+minbucket	- the minimum number of observations in any terminal <leaf> node
+cp 	- complexity parameter. Any split that does not decrease the overall lack of ﬁt by a factor of cp is not attempted. A high cp value implies a split is attempted only if information gain is larger by amount cp. Choosing a higher value of cp reduces number of tree splits, as fewer splits will meet the high bar on information gain as set by high cp parameter.
+
+In our analysis above parameters are varied.
+
+
 
 \newpage
 # Model Building & Evaluation
@@ -428,18 +480,248 @@ if (file.exists(cvTuning)) {
 }
 gg <- getNestedTuneResultsOptPathDf(cvWithTuning)
 #getNestedTuneResultsX(cvWithTuning)
+
 ```
 
-```{r}
-gg
+**Impact of hyper parameter tuning on model's performance**
+
+Model performance metric variation as a function of tuning parameters is analyzed through plots below.
+ 
+_Impact due to Complexity Parameter (cp)_
+
+Complexity parameter controls the tree growth, and additional splits at a level are attempted only if information gain is larger by amount cp. 
+
+* Higher cp value puts a larger requirement on information gain with every split, leading to smaller trees. 
+* Smaller cp values lower thre requirement on information gain with every split, leading to larger trees. 
+
+As can be seen from figure below:
+
+* Smaller cp values, lead to better or improved metric (F1 score)
+* For maxdepth upto 4, reducing cp does not improve the metric, which is intuitive, as tree stops to grow. However increasing maxdepth > 4 allows better metric.
+
+Clearly maxdepth and cp directly help control and influence the classification model metrics.
+
+```{r, comment=NA,include=TRUE, message=FALSE, echo=FALSE, warning=FALSE,cache=TRUE, fig.width=5,fig.height=4, fig.align='center',results='markup'}
+
+ggplot(data=gg)+
+  geom_point(aes(x = cp, y=f1.test.mean, color = factor(maxdepth)))+
+  # scale_color_grey()+
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5),panel.grid.minor = element_line(colour="grey", size=0.1),panel.grid.major = element_line(colour="grey", size=0.3))+
+  scale_x_log10()+
+  labs(title="F1 Score Vs. Complexity Parameter (cp)",x="Complexity Parameter (cp)", y = "F1 Score",col = "maxdepth")
 ```
 
+_Impact due to Minsplit and Minbucket_
 
+Minsplit is the minimum number of observations that must exist in a node in order for a split to be attempted.
+
+* Smaller value is expected to lead to tree growth.
+
+Minbucket is the  minimum number of observations in any terminal <leaf> node
+
+* Smaller value is expected to lead to tree growdth
+
+However, Minsplit and Minbucket oppose each other sometimes, and may render other value redundant. E.g. minsplit has to be larger than minbucket for both of the parameters to operate independently.
+
+Looking at impact of Minsplit and Minbucket on F1 metric, refer figure below, does not indicate that they play a major role in determining model score like F1.  It is clear that cp value is what drives the model performance.
+
+```{r, comment=NA,include=TRUE, message=FALSE, echo=FALSE, warning=FALSE,cache=TRUE, fig.width=5,fig.height=4, fig.align='center',results='markup'}
+
+ggplot(data=gg)+
+  geom_point(aes(x = minbucket, y=f1.test.mean, color = cp))+
+  # scale_color_grey()+
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5),panel.grid.minor = element_line(colour="grey", size=0.1),panel.grid.major = element_line(colour="grey", size=0.3))+
+  scale_color_gradient(low = "blue", high = "red")+
+  scale_x_log10()+
+  labs(title="F1 Score Vs. Minbucket",x="Minbucket", y = "F1 Score")
+```
+
+```{r, comment=NA,include=TRUE, message=FALSE, echo=FALSE, warning=FALSE,cache=TRUE,fig.width=5,fig.height=4, fig.align='center',results='markup'}
+
+ggplot(data=gg)+
+  geom_point(aes(x = minsplit, y=f1.test.mean, color = cp))+
+  # scale_color_grey()+
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5),panel.grid.minor = element_line(colour="grey", size=0.1),panel.grid.major = element_line(colour="grey", size=0.3))+
+  scale_color_gradient(low = "blue", high = "red")+
+  scale_x_log10()+
+  labs(title="F1 Score Vs. Minsplit",x="Minsplit", y = "F1 Score")
+
+```
+
+**Model Performance of Tuned Model**
+
+Tuned decision tree has following hyperparamter values:
+
+* minsplit  = 8
+* minbucket = 3 
+* cp        = 0.0125
+* maxdepth  = 9
+
+Below model performance summary captures all metrics associated with classification task.
+
+```{r, comment=NA,include=TRUE, message=FALSE, echo=FALSE, warning=FALSE,cache=TRUE,out.align='left',fig.pos="top",results='markup'}
+
+model = rpart(formula=isSpam~.,
+              data=train.data,
+              method="class",
+              parms = list(split = "information"),
+              cp = 0.0125,                           # no size penalty
+              maxdepth = 9,                         # defines the maximum depth a tree can grow
+              minsplit = 8,                         # Nodes of size 5 (or # more) can be split,
+              minbucket = 3,                        # provided each sub-node contains at least 2 ob
+             )
+
+predTest = predict(object=model, newdata=test.data, type="class")
+cm <- confusionMatrix(table(predTest,test.data$isSpam)[c(2,1),c(2,1)],mode = "everything")
+
+print (cm)
+```
+
+_Metrics used to evaluate the model are:_
+
+* Precision     : 0.8365
+* Specificity   : 0.9504
+* F1 score      : 0.7836
+* Recall        : 0.7370
+* Accuracy      : 0.8957
+
+_Observations_
+
+* Model has good Specificity and Precision, indicative of smaller False Positive which is desired.
+* The F1 score shows a good balance between precision and recall.
+
+
+
+```{r, comment=NA,include=TRUE, message=FALSE, echo=FALSE, warning=FALSE,cache=TRUE,out.align='left',fig.pos="top",results='markup'}
+# Exploring the model
+#@printcp(treeModelData, digits = 3)
+```
 \newpage
 # Model Interpretability & Explainability
 
+Most important features from the model that was built after 10 fold cross validation and hyperparameter tuning is as shown below. While building model using decision trees assigns scores to these variables. Feature scores gives us clear picture which features tree found most important. So for this particular model we can clearly see  feature perCaps (percentatge uppercase letters ) is the most important feature followed by numLines (number of lines per message),perHTML(percentage HTML tags),numDlr (Number of dollar symbol). As per this model perCaps is the most deciding factor to know if email is spam or not then number of lines and percentage of HTML tags.
+
+```{r, comment=NA,include=TRUE, message=FALSE, echo=FALSE, warning=FALSE,fig.cap="Feature importance"}
+
+# Training the final tuned model
+tunedTree <- setHyperPars(tree, par.vals = tunedTreePars$x)
+tunedTreeModel <- train(tunedTree, treeTask)
+
+# Plotting the decision tree
+treeModelData <- getLearnerModel(tunedTreeModel)
+
+
+dat <- data.frame(vars=names(treeModelData$variable.importance ), 
+                  importance=treeModelData$variable.importance )
+
+dat1 <- dat  %>% arrange(importance)
+dat1$vars <- factor(dat1$vars, levels =dat1$vars) 
+
+# Draw plot
+ggplot(dat1, aes(x=vars, y=importance)) + 
+  geom_bar(stat="identity", width=.5, fill="tomato3") + 
+  coord_flip()+
+  labs(title="Feature importance", 
+       subtitle="Decision Trees", 
+       caption="source: unknown") + 
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))
+
+
+```
+
+
+The most importatn feature is perCaps (Percentage capital letters in the body of the message) and least important feature is isPGPsigned (Signature). perCaps contributes more than any other features. Almost 600 emails have been flagged as a Spam while numLines contributes little less than 400 towards Spams out of total emails. This is quite what we see on daily basis all such Spams contains capital letters. This bar plot is quite intuative and self explanatory.
+
+```{r, comment=NA,include=TRUE, message=FALSE, echo=FALSE, warning=FALSE,fig.cap="Decision Tree"}
+rpart.plot(treeModelData, roundint = FALSE,
+box.palette = "BuBn",
+type = 3)
+
+```
+
+Interpreting trees is quite straightforward. One just need to answer series of questions to go to bottom of the tree to classify message as Spam or not Spam. 
+
+**Example 1**
+
+Here is one example randomly picked up from the dataset and let's walkthrough the tree from top to bottom of the tree by answering questions.
+
+```{r, comment=NA,include=TRUE, message=FALSE, echo=FALSE, warning=FALSE,fig.cap="Decision Tree"}
+sqldf::sqldf("select isSpam,perCaps,numLines,perHTML,numDlr,forwards,isInReplyTo,isRe  from email_final where isSpam='T' limit 1" )
+```
+
+Q1 - Is perCaps > 13 
+
+A1 - Yes PerCaps = 38.47 > 13 move to right branch
+
+Q2 - is numLines > 9.5  
+
+A2 - Indeed numLines = 101 >9.5 move to right branch
+
+Q3 - is isInReplyTo T or F
+
+A3 - its False go to the right branch and  this is leaf node.
+
+By answering just three questions we concluded that email is Spam email. This is real advantage of decision trees. They superbly interpretable compared to other models.
+
+
+**Example 2**
+
+Here is another example for email that is not a spam.
+
+```{r, comment=NA,include=TRUE, message=FALSE, echo=FALSE, warning=FALSE,fig.cap="Decision Tree"}
+sqldf::sqldf("select isSpam,perCaps,numLines,perHTML,numDlr,forwards,isInReplyTo,isRe  from email_final where isSpam='F' limit 1" )
+```
+
+
+Q1 - Is perCaps < 13 
+
+A1 - Yes perCaps= 4.45 < 13  move towards left Subtree 
+
+Q2 - Is perHTML < 3.9 
+
+A2 - Yes perHTML=0 < 3.9 move towards left Subtree
+
+Q3 - Is forwards > 1.2 
+
+A3 - No forwards=0 < 1.2 move towards right Subtree
+
+Q4 - Is isInReplyTo = T ?
+
+A4 - isInReplyTo = T move towards left subtree and this is leaf node which tells us that this email is not a Spam.
+
+Again by answering just four questions we concluded that email is not a Spam. 
+
 \newpage
 # Conclusion
+
+An Email SPAM filtering model is developed that is capable of accurately identifying SPAM 90% of time, and with a true negative rate, or specificity at 95%. This implies very few times a non-SPAM email gets classified as SPAM.
+
+A decision tree based classification approach is developed that can be deployed alongside automatic reading of email and doing a real time check to categorize email as a SPAM or not SPAM.
+
+The model used following variables for classification of email in SPAM:
+
+* forwards 
+* perCaps
+* perHTML
+* numLines
+* numDlr
+* subBlanks
+* isInReplyTo
+
+An email is classifies as SPAM when any of following rule is met:
+
+* perCaps >= 13 ,  and numLines > 9.5, and, isInReplyTo is false 
+* perCaps < 13  ,  and perHTML > 3.9,  and numLines > 242
+* perCaps < 13  ,  and perHTML < 3.9,  and  #forwards < 1.2., and numDlr >= 0.5, isInReplyTo is false, and, numLines < 103
+* perCaps < 13  ,  and perHTML < 3.9,  and  #forwards < 1.2., and numDlr < 0.5 , isInReplyTo is true,  and, subBlanks >=25 
+* perCaps < 13  ,  and perHTML < 3.9,  and  #forwards < 1.2., and numDlr < 0.5 , isInReplyTo is true,  and, subBlanks < 25, and subExcCt >=0.5 and numLines > 17
+* perCaps < 13  ,  and perHTML < 3.9,  and  #forwards < 1.2., and numDlr < 0.5 , isInReplyTo is true,  and, subBlanks < 25, and subExcCt < 0.5 and isDear = 2
+
+Decision trees are super interpretable compared to other models/algorithms, For future work Naive Bayes, SVM, Stockastic models could also be explored and benchmarked for model performance. 
+
 
 \newpage
 # References {-}
@@ -449,29 +731,5 @@ gg
 2. [The statistica report](https://www.statista.com/statistics/420391/spam-email-traffic-share/)
 3. [The Paper I](https://www.ijser.org/researchpaper/EMAIL-SPAM-FILTERING-USING-DECISION-TREE-ALGORITHM.pdf) 	Email spam filtering using decision tree algorithm. 
 4. [The Paper II](https://ijcat.com/archives/volume5/issue2/ijcatr05021004.pdf)	Identifying Valid Email Spam Emails Using Decision Tree. 
+5. [Connection for Businesss website](https://www.connections.com/blog/the-negative-effects-of-spam)
 
-
-```{r}
-# \donttest{
-task = makeClassifTask(data = iris, target = "Species")
-lrn = makeLearner("classif.rpart")
-# stupid mini grid
-ps = makeParamSet(
-  makeDiscreteParam("cp", values = c(0.05, 0.1)),
-  makeDiscreteParam("minsplit", values = c(10, 20))
-)
-ctrl = makeTuneControlGrid()
-inner = makeResampleDesc("Holdout")
-outer = makeResampleDesc("CV", iters = 2)
-lrn = makeTuneWrapper(lrn, resampling = inner, par.set = ps, control = ctrl)
-mod = train(lrn, task)
-#> Error: Please use column names for `x`
-print(getTuneResult(mod))
-#> Error in checkClass(x, classes, ordered, null.ok): object 'mod' not found
-# nested resampling for evaluation
-# we also extract tuned hyper pars in each iteration
-r = resample(lrn, task, outer, extract = getTuneResult)
-getNestedTuneResultsOptPathDf(r)
-```
- 
- 
