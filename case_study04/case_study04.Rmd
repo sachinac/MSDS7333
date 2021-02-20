@@ -1,0 +1,46 @@
+---
+title: 'MSDS 7333 Spring 2021: Case Study 04 '
+author: "Sachin Chavan,Tazeb Abera,Gautam Kapila,Sandesh Ojha"
+date: "`r format(Sys.time(), '%Y %B %d')`"
+output:
+  pdf_document:
+    keep_tex: yes
+    extra_dependencies: float
+  word_document: default
+  html_document:
+    df_print: paged
+subtitle: Influenza forecast
+header-includes:
+- \usepackage{siunitx}
+- \newcolumntype{d}{S[table-format=3.2]}
+- \usepackage{multicol}  
+- \usepackage{float}  
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{Case Study 03}
+latex_engine: pdflatex
+urlcolor: gray    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Introduction
+
+\newpage
+# Business Understanding
+
+\newpage
+# Data Extraction & Evaluation
+
+\newpage
+# Modeling Building
+
+\newpage
+# Forecasting
+
+\newpage
+# Conclusions
+
+\newpage
+# References
