@@ -40,7 +40,7 @@ Reference : Deborah Nolan: Duncan Temple Lang. Data Science in R.Chapman and Hal
 
 Python begins
 
-**3) Case Study 04** 
+**4) Case Study 04** 
 
 This case study is building ARIMA model using python. Use historical flu data and provide four week farcast. 
 
