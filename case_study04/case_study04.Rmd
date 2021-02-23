@@ -35,8 +35,13 @@ World Health Organization (WHO) plays an important role in keeping watch on such
 
 With this initial background this case study provides different insights from the [data](https://apps.who.int/flumart/Default?ReportNo=12) that is publicly available on WHO's website. Study will analyze trends in the data to develop model to 2 week forecast of infections details of which is available in later section of this document.
 
-\newpage
 # Business Understanding
+
+The Influenza causes significant impact on the economy and puts additional burden health system every year. According to data adults with certain medical conditions and people above 60 years of age particularly affected by flu badly the end results in hospitalization. Sudden increase in patients puts pressure on Hospitals, Doctors, nurses and eventually affects treatments of patients. Knowing that such a diseases occurs every year requires monitoring, data collection and planning. There are several ways to control getting into such situation. Once of the way is vaccination before winter or monsoon starts, spreading awareness , face-masking etc. Another way to go one step further and provide forecast so that preventive actions can be taken at right time.Forecast can provide guidence to logistics for healthcare, e.g. start time of vaccinations, medical staff, arranging medicines, medical equipmments only when it is needed, alerting citizens to take precautionary steps like washing hands, physical distancing, using face masks etc. Which eventually may help to reduce number of patients and in turn pressure on health agencies. Therefore it is important to monitor such diseases by the way of collecting health data on regular basis so that preventive actions can be taken, to alert Health organizations in advance. THe goal of this case study is to obtain data that WHO has collected over the years and build and evaluate a model that will accurately forecast incidences of Influenza. 
+
+## Objective
+
+Download historical [data](https://apps.who.int/flumart/Default?ReportNo=12) that is available on the WHO website and build and evaluate a time series model (ARIMA) to provide accurate forecast of Influenza incidences.
 
 \newpage
 # Data Extraction & Evaluation
