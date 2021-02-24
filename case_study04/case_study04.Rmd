@@ -51,6 +51,16 @@ Download historical [data](https://apps.who.int/flumart/Default?ReportNo=12) tha
 
 \newpage
 # Forecasting
+```{r}
+library(tswge)
+
+flu_ts <- read.csv(file.choose())
+
+plotts.sample.wge(flu_ts$TOTAL.PATIENTS)
+
+
+
+```
 
 \newpage
 # Conclusions
