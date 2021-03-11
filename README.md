@@ -54,8 +54,12 @@ Reference : Online
 This case study is all about studying impact of missing values. Building and comparing models with and without impuatiations for three common missing types.
 
 MCAR - Missing Completely at Random
+
 MAR  - Missing at Random 
+
 MNAR - Missing Not at Random
+
+
 
 Techology : Python, Latex
 
