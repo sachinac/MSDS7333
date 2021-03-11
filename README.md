@@ -49,7 +49,7 @@ Techology : Python, Latex
 Reference : Online
 
 
-**5) Case Study 04** 
+**5) Case Study 05** 
 
 This case study is all about studying impact of missing values. Building and comparing models with and without impuatiations for three common missing types.
 
