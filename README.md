@@ -64,3 +64,11 @@ MNAR - Missing Not at Random
 Techology : Python, Latex
 
 Reference : Online
+
+**6) Case Study 06** 
+
+This case study is about evaluating deep neural network for classification problem and higgs boson dataset shall be used for signal vs background classification problem using TensorFlow.
+
+Techology : Python, Latex
+
+Reference : Online
