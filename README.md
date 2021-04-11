@@ -72,3 +72,11 @@ This case study is about evaluating deep neural network for classification probl
 Techology : Python, Latex
 
 Reference : Online
+
+**7) Case Study 07** 
+
+Perform analysis and build a model on the unknown dataset. This is binary classification models with 50 unknown features. Analyze and find important features and build model and calculate and compare cost of each model.
+
+Techology : Python, Latex
+
+Reference : Online
