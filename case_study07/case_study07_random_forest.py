@@ -1,17 +1,7 @@
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import missingno as msno 
-import plotly.express as px
 import pickle
-
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-
-from sklearn.decomposition import PCA
-
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.model_selection import GridSearchCV
@@ -34,34 +24,22 @@ XS_test_ohe  = X_test.values
 y_train      = y_train_target.values
 y_test       = y_test_target.values
 
-
-log_model = LogisticRegression(random_state=1999,max_iter=1000)
-
 cs07_random_state_ = 1999
+
+rf_model = RandomForestClassifier(random_state=cs07_random_state_)
+
 
 #
 # Run Grid Search
 #
 
-log_param_grid = [
-      {'penalty'      : ['l1'],
-       'C'            : np.logspace(-4, 4, 10),
-       'solver'       : ['liblinear'],
-       'random_state' : [cs07_random_state_]},
-      {'penalty'      : ['l2'],
-       'C'            : np.logspace(-4, 4, 10),
-       'solver'       : ['sag'],
-       'max_iter'     : [800],
-       'random_state' : [cs07_random_state_]}
+rf_param_grid = [
+      {'max_features' :  np.arange(1,6,1),
+       'n_estimators' :  np.arange(10,210,10),
+       'random_state' :  [cs07_random_state_],
+       'n_jobs'       :  [-1]
+      }
   ]
-
-log_param_grid = [
-      {'penalty'      : ['l2'],
-       'C'            : [0.2,0.4,0.8,1.5,10,100,1000],
-       'solver'       : ['saga'],
-       'random_state' : [cs07_random_state_]}
-  ]
-
 
 log_scoring = {'ROC'      : 'roc_auc', 
                'Accuracy'  : make_scorer(accuracy_score),
@@ -70,18 +48,17 @@ log_scoring = {'ROC'      : 'roc_auc',
                'F1'        : make_scorer(f1_score)
               }
 
-
 cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1999)
 
 print('Running grid search : ')
 
-grid_search = GridSearchCV(estimator=log_model, param_grid=log_param_grid, n_jobs=-1, cv=cv, scoring='f1',error_score=0)
+grid_search = GridSearchCV(estimator=rf_model, param_grid=rf_param_grid, n_jobs=-1, cv=cv, scoring=log_scoring,refit='Recall',error_score=0)
 
 print('Fit grid search : ')
 grid_result = grid_search.fit(XS_train_ohe, y_train.flatten())
 
 print('store logistic grid results')
-pickle.dump( grid_result, open( "data/logistic_simple_grid_result.dat", "wb" )) 
+pickle.dump( grid_result, open( "data/rf_grid_result.dat", "wb" )) 
 
 print('End of Process')
 
